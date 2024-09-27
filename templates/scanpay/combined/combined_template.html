@@ -1,0 +1,123 @@
+{% extends 'scanpay/base.html' %}
+{% block title %}Combined View{% endblock %}
+
+{% block content %}
+<!-- Redeem Product List -->
+<div class="card">
+
+    <div class="card-body pt-0">
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+
+            <!-- Update Form -->
+            <div class="card p-2">
+                <form id="update-form" class="p-4" enctype="multipart/form-data" method="POST">
+                    <span style="font-size: 20px; ">Points</span>
+                    {% csrf_token %}
+                    {{ organization_form.as_p }}
+                    <input type="submit" value="Submit" class="btn btn-primary mt-2" id="create-btn">
+                </form>
+            </div>
+            {%comment%}{% include 'scanpay/components/title_bar.html' with title='Item List' create='/create/' %}{%endcomment%}
+            {% include 'scanpay/components/search_filter.html' with  search_title="Search Item" create_url="tbl_redeemproduct_create" create_button="Add Reedemable Item" %} 
+            <span style="font-size: 20px; margin: 20px;">Reedemable Products</span>
+
+            <div class="table-responsive" style="margin: 20px;">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+                    {% if redeem_products %}
+                    <thead>
+                        <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                            <!-- <th class="w-10px pe-2 sorting_disabled" rowspan="1" colspan="1" aria-label="" style="width: 29.25px;">
+                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                                    <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_customers_table .form-check-input" value="1">
+                                </div>
+                            </th> -->
+                            <th class="min-w-125px sorting" tabindex="0"> Name</th>
+                            <th class="min-w-125px sorting" tabindex="0"> Points</th>
+                            <th class="min-w-125px sorting" tabindex="0"> Type</th>
+                            <th class="min-w-125px sorting" tabindex="0"> State</th>
+                            <th class="min-w-125px sorting" tabindex="0"> Group</th>
+                        </tr>
+                    </thead>
+                    {% endif %}
+                    <tbody class="fw-bold text-gray-600">
+                        {% for object in redeem_products %}
+                        <tr class="odd" id="obj-{{ object.pk }}">
+                            <!-- <td>
+                                <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" value="1">
+                                </div>
+                            </td> -->
+                            <td>{{ object.name }}</td>
+                            <td>{{ object.points }}</td>
+                            <td>{{ object.type }}</td>
+                            <td>{% include 'scanpay/components/status.html' with status=object.state %}</td>
+                            <td>{{ object.group }}</td>
+                            <td class="text-end">
+                                <a href="#" class="btn btn-sm btn-light btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">Actions
+                                    <span class="svg-icon svg-icon-5 m-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                            <path d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z" fill="black"></path>
+                                        </svg>
+                                    </span>
+                                </a>
+                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-bold fs-7 w-125px py-4" data-kt-menu="true">
+                                    <div class="menu-item px-3">
+                                        <a href="{% url 'tbl_redeemproduct_update' object.pk %}" class="menu-link px-3" data-kt-customer-table-filter="update_row">Update</a>
+                                    </div>
+                                    <div class="menu-item px-3">
+                                        <a onclick="remove({{ object.pk }},'{% url "tbl_redeemproduct_delete" %}','{{ object }}',)" class="menu-link px-3" id="obj" data-kt-customer-table-filter="delete_row">Delete</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        {% include 'scanpay/components/empty.html' with title="Redeemable Products" %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if redeem_products %}
+            {% include 'pagination.html' %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+
+{%comment%}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('update-form');
+        
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Points updated successfully');
+                    // Optionally, you can also redirect or update the page content here
+                } else {
+                    alert('Failed to update points');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating points');
+            });
+        });
+    });
+</script>
+{% endcomment %}
+
+{% endblock %}

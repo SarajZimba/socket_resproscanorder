@@ -1,0 +1,224 @@
+{% extends 'scanpay/base.html' %}
+
+{% block pagetitle %}Create Timed Menu{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Timed Promo Menus</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        select, input[type="time"] {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        table th {
+            background-color: #007bff;
+            color: #fff;
+        }
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .day-entry input[type="time"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .apply-button {
+            margin-top: 5px;
+        }
+    </style>
+    <script>
+        function updateCheckboxState(changedInput) {
+            // Get the row index from the changed input
+            var rowIndex = changedInput.getAttribute('data-row');
+            var row = document.querySelector(`tr.day-entry:nth-of-type(${rowIndex})`);
+            
+            var startInput = row.querySelector('.start-time');
+            var endInput = row.querySelector('.end-time');
+            var checkbox = row.querySelector('.apply-checkbox');
+
+            // Check if both start and end times are provided
+            if (startInput.value && endInput.value) {
+                checkbox.checked = true;
+            } else {
+                checkbox.checked = false;
+            }
+        }
+
+        function applyToAll() {
+            var startTime = document.getElementById('id_start_time').value;
+            var endTime = document.getElementById('id_end_time').value;
+            var startTimes = document.querySelectorAll('.start-time');
+            var endTimes = document.querySelectorAll('.end-time');
+            var checkboxes = document.querySelectorAll('.apply-checkbox');
+
+            startTimes.forEach(function(startInput) {
+                startInput.value = startTime;
+            });
+            endTimes.forEach(function(endInput) {
+                endInput.value = endTime;
+            });
+            checkboxes.forEach(function(checkbox) {
+            checkbox.checked = true;
+            // Optionally apply times to the row as well
+            // applyToRow(checkbox.closest('tr'));
+        });
+        }
+        function applyToRow(row) {
+            var startTime = document.getElementById('id_start_time').value;
+            var endTime = document.getElementById('id_end_time').value;
+
+            var startInput = row.querySelector('.start-time');
+            var endInput = row.querySelector('.end-time');
+            var checkbox = row.querySelector('.apply-checkbox');
+
+            if (checkbox.checked) {
+                startInput.value = startTime;
+                endInput.value = endTime;
+            } else {
+                startInput.value = '';
+                endInput.value = '';
+            }
+        }
+
+        function submitForm() {
+            var days = document.querySelectorAll('.day-entry');
+            var data = [];
+            days.forEach(function(day) {
+                var checkbox = day.querySelector('.apply-checkbox');
+                if (checkbox.checked) {
+                    var dayData = {
+                        'menutype': document.getElementById('id_menutype').value,
+                        'dayofweek': day.querySelector('input[name="dayofweek"]').value,
+                        'start_time': day.querySelector('.start-time').value,
+                        'end_time': day.querySelector('.end-time').value
+                    };
+                    data.push(dayData);
+                }
+            });
+
+            fetch('{% url 'create_timed_promo_menu' %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status) {
+                    window.location.href = '/scanpay/timedmenu'; // Redirect on success
+                } else {
+                    alert('There was an error processing your request.'); // Handle errors
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Timed Promo Menus</h1>
+        <form onsubmit="event.preventDefault(); submitForm();">
+            {% csrf_token %}
+            <label for="id_menutype">Menu Type:</label>
+            <select id="id_menutype" name="menutype">
+                <!-- Populate menu types from the API -->
+                {% for menu_type in menu_types %}
+                    <option value="{{ menu_type.id }}">{{ menu_type.title }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="id_start_time">Start Time:</label>
+            <input type="time" id="id_start_time" name="start_time">
+
+            <label for="id_end_time">End Time:</label>
+            <input type="time" id="id_end_time" name="end_time">
+
+            <button type="button" onclick="applyToAll()">Apply to All Days</button>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Apply</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Render days with input fields here -->
+                    {% for day, day_label in days_of_week %}
+                        <tr class="day-entry">
+                            <td>{{ day_label }}
+                                <input type="hidden" name="dayofweek" value="{{ day }}">
+                            </td>
+                            <td><input type="time" class="start-time" name="start_time_{{ day }}" data-row="{{ forloop.counter }}" onchange="updateCheckboxState(this)"></td>
+                            <td><input type="time" class="end-time" name="end_time_{{ day }}"  data-row="{{ forloop.counter }}" onchange="updateCheckboxState(this)"></td>
+                            <td>
+                                <input type="checkbox" class="apply-checkbox" onclick="applyToRow(this.closest('tr'))" data-row="{{ forloop.counter }}">
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends 'scanpay/base.html' %}
+{% block pagetitle %}Product List {% endblock %}
+{% block home %} {% url 'product_list' %} {% endblock %}
+{% block title %}Product List {% endblock %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Products</title>
+    <style>
+        /* Add your CSS styles here */
+        .hidden {
+            display: none;
+        }
+
+        .selected-product {
+            background-color: gray;
+            color: white;
+            padding: 0.5rem;
+            margin: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px;
+        }
+
+        .selected-product-remove {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .selected-product-remove:hover {
+            background-color: darkred;
+        }
+
+        #productList {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+<body>
+    <div id="api-token" data-token="{{ token }}"></div>
+
+    <div class="container m-2">
+        <div class="row">
+          <div class="container mr-2">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <form id="productForm" method="post" class="mb-3" >
+                        {% csrf_token %}
+                        <label for="search">Search for products:</label>
+                        <input type="hidden" id="selectedProducts" name="selectedProducts" class="form-select">
+                        <input type="text" id="search" name="search" oninput="filterDropdown()" class="form-select">
+                        <select id="productDropdown" size="5" style="display: none;" class="form-select">
+                        </select>
+                        <div id="productList" style=" width: fit-content; padding:0.5rem;color: black;" class="m-3"></div>
+                        <button type="submit">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div>
+      </div>
+
+    <!-- Include Axios library -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        function fetchProducts() {
+            const token = document.getElementById('api-token').dataset.token; // Replace 'YOUR_AUTH_TOKEN' with your actual token
+            console.log("token is ", token)
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            console.log(headers)
+            axios.get('{% url 'menu-list-alloutlet' %}')
+                .then(response => {
+                    const products = response.data;
+                    // console.log(products); // For debugging purposes
+                    populateDropdown(products);
+                })
+                .catch(error => {
+                    console.error('Error fetching products:', error);
+                });
+        }
+
+        function populateDropdown(products) {
+            const productDropdown = document.getElementById('productDropdown');
+            productDropdown.innerHTML = '';
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.text = product.item_name; // Assuming each product has a 'name' attribute
+                option.value = product.id; // Assuming each product has an 'id' attribute
+                productDropdown.add(option);
+            });
+            productDropdown.style.display = 'block';
+            productDropdown.style.display = 'form-select';
+
+            productDropdown.addEventListener('change', function(){
+                console.log("product changed")
+                addProductToList(this.value);
+            });
+        }
+        let selectedProducts = [];
+        function addProductToList(productId) {
+            const selectedProduct = document.getElementById('productDropdown').options[document.getElementById('productDropdown').selectedIndex].text;
+
+            
+
+            const productListDiv = document.getElementById('productList');
+
+            const productDiv = document.createElement('div');
+            productDiv.classList.add('selected-product');
+
+
+            // Create a span to display the product title
+            const productTitle = document.createElement('span');
+            productTitle.textContent = selectedProduct;
+
+
+            // Create a button to remove the product
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'X';
+            removeButton.addEventListener('click', function() {
+                // Remove the product from the selectedProducts array
+                selectedProducts = selectedProducts.filter(product => product.selectedProductId !== productId);
+                // Remove the product div from the DOM
+                productDiv.remove();
+                // Update the hidden input value
+                updateSelectedProductsInput();
+            });
+
+            productDiv.appendChild(productTitle);
+            productDiv.appendChild(removeButton);
+
+            // const productElement = document.createElement('div');
+            // productElement.textContent = selectedProduct;
+            productListDiv.appendChild(productDiv);
+            console.log(productListDiv)
+
+            selectedProducts.push({ selectedProductId: productId, selectedProductName: selectedProduct })
+
+            updateSelectedProductsInput();
+
+            // const hiddenInput = document.getElementById('selectedProducts');
+            // hiddenInput.value = JSON.stringify(selectedProducts);
+        }
+
+        function updateSelectedProductsInput() {
+        const hiddenInput = document.getElementById('selectedProducts');
+        hiddenInput.value = JSON.stringify(selectedProducts);
+    }
+
+        function filterDropdown() {
+            const searchQuery = document.getElementById('search').value.toLowerCase();
+            const productDropdown = document.getElementById('productDropdown');
+            const options = productDropdown.getElementsByTagName('option');
+            for (let option of options) {
+                if (option.text.toLowerCase().includes(searchQuery)) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        }
+
+        function searchProducts() {
+            const selectedProducts = [];
+            const productListDiv = document.getElementById('productList');
+            const checkboxes = document.querySelectorAll('input[name="selectedProducts"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedProducts.push(checkbox.value);
+            });
+            // Here you can do something with the selected products array
+            console.log(selectedProducts);
+        }
+
+        // Fetch products when the page loads
+        fetchProducts();
+    </script>
+</body>
+</html>
+{% endblock %}

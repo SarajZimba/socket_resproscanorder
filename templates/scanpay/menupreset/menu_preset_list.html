@@ -1,0 +1,63 @@
+{% extends 'scanpay/base.html' %}
+
+{% block pagetitle %}MenuPreset List{% endblock %}
+
+{% block home %}
+    <a href="{% url 'menu_type_list' %}" class="btn btn-sm btn-light">Back to Menu Types</a>
+{% endblock %}
+
+{% block title %}MenuPreset List{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <a href="{% url 'menu_preset_product_create' menutype_id %}" class="btn btn-primary mb-3">Add Products</a>
+
+        <div class="card">
+            <div class="card-body pt-0">
+                <div class="card-body text-center">
+                    <h2 class="display-6">{{ menutype }}</h2>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer">
+                        {% if object_list %}
+                        <thead class="text-gray-400 fw-bolder fs-7 text-uppercase">
+                            <tr class="text-start">
+                                <th class="min-w-125px">Title</th>
+                                <th class="min-w-125px">Slug</th>
+                                <th class="min-w-125px">Description</th>
+                                <th class="min-w-125px">Status</th>
+                                <th class="min-w-125px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-bold text-gray-600">
+                            {% for object in object_list %}
+                            <tr class="odd" id="obj-{{ object.pk }}">
+                                <td>{{ object.item_name }}</td>
+                                <td>{{ object.slug }}</td>
+                                <td>{{ object.description }}</td>
+                                <td>{% include 'scanpay/components/status.html' with status=object.status %}</td>
+                                <td ><a href="{% url 'menu_preset_product_remove' object.id menutype_id %}" class="btn btn-danger text-white">Remove</a></td>
+
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No items found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% endif %}
+                    </table>
+                </div>
+
+                {% if object_list %}
+                    {% include 'pagination.html' %}
+                {% else %}
+                    {% include 'scanpay/components/empty.html' with title="Menu Preset" %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

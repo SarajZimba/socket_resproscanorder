@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<htmllang="en">
+
+    <head>
+        <metacharset="UTF-8" />
+        <title> Review Report</title>
+        <style>
+            table,
+            th,
+            td {
+                border: 1px solid rgb(117, 114, 114);
+                border-collapse: collapse;
+                font-family: Roboto;
+                padding: 5px;
+            }
+
+            table th {
+                background-color: rgb(229, 200, 74);
+                ;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h3>Here is the report for customers review</h3>
+        <p>Date: {{date_now}}</p>
+        <p>Conducted at: {{time_now}}</p>
+
+        <table>
+            <tbody>
+
+                <tr>
+                    <th>Atmosphere Rating</th>
+                    <td>{{atmosphere}}/5</td>
+                </tr>
+
+                <tr>
+                    <th>Presentation Rating</th>
+                    <td>{{presentation}}/5</td>
+                </tr>
+
+                <tr>
+                    <th>Service Rating</th>
+                    <td>{{service}}/5</td>
+                </tr>
+
+                <tr>
+                    <th>Cleanliness Rating</th>
+                    <td>{{cleanliness}}/5</td>
+                </tr>
+
+                <!--<tr>-->
+                <!--    <th>Beverage Sale</th>-->
+                <!--    <td>{{beverage_sale}}</td>-->
+                <!--</tr>-->
+
+                <tr>
+                    <th>Overall Rating</th>
+                    <td>{{overall}}/5</td>
+                </tr>
+
+                <tr>
+                    <th>Review</th>
+                    <td>{{review}}</td>
+                </tr>
+{%comment%}
+                <tr>
+                    <th>Credit Card</th>
+                    <td>{{credit_card}}</td>
+                </tr>
+                <tr>
+                    <th>Mobile Payment</th>
+                    <td>{{mobile_payment}}</td>
+                    <tr>
+                    <td colspan="2">
+                        <table colspan="2">
+
+                    {% if mobilepaymenttype_dict %}
+                    {% for payment_type, payment_amount in mobilepaymenttype_dict.items %}
+                    <tr colspan="2">
+                        <th colspan="1">{{ payment_type }}</th>
+                        <td colspan="1">{{ payment_amount }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                </table>
+                </td>
+
+                    </tr>
+                </tr>
+
+                <tr>
+                    <th>Credit</th>
+                    <td>{{credit}}</td>
+                </tr>
+
+                <tr>
+                    <th>Complimentary</th>
+                    <td>{{complimentary}}</td>
+                </tr>
+                <tr>
+                    <th>Total Discount</th>
+                    <td>{{total_discounts}}</td>
+                </tr>
+                <tr>
+                    <th>No of Guests</th>
+                    <td>{{no_of_guest}}</td>
+                </tr>
+                <tr>
+                    <th>Start Bill</th>
+                    <td>{{start_bill}}</td>
+                </tr>
+                <tr>
+                    <th>End Bill</th>
+                    <td>{{end_bill}}</td>
+                </tr>
+                <tr>
+                    <th>Total Void Count</th>
+                    <td>{{total_void_count}}</td>
+                </tr>
+                <tr>
+                    <th>Employee Name</th>
+                    <td>{{employee_name}}</td>
+                </tr>
+
+{%endcomment%}
+
+            </tbody>
+        </table>
+
+        <h4>ItemWise Rating</h4>
+        <table>
+        <tr><td>Itemname</td>
+        <td>Rating</td>
+        <td>Comment</td></tr>
+         <!--Inside your table body -->
+        {% for itemrating in itemwiserating_list %}
+                <tr>
+                    <td>{{ itemrating.itemname }}</td>
+                    <td>{{ itemrating.rating }}/5</td>
+                    <td>{{ itemrating.comment }}</td>
+                </tr>
+        {% endfor %}
+            
+        
+    </table>
+
+    </body>
+
+    </html>
