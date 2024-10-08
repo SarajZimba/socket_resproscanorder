@@ -305,6 +305,10 @@ class BillSerializer(ModelSerializer):
                 table.is_occupied = False
                 table.is_estimated = False
                 table.save()
+            for ordertracker in order_obj.tblordertracker_set.all():
+                ordertracker.done = True
+                ordertracker.seen = True
+                ordertracker.save()
 
             if split_payment and payment_mode.lower() == "split":
                 branch = invoice_no.split('-')[0]
@@ -361,10 +365,17 @@ class BillSerializer(ModelSerializer):
                         )
     
                     payment_data.append(mobile_payment)
+
+            from order.utils import send_order_notification_socket, send_bar_order_notification_socket
+            # send_bar_order_notification_socket()
+            # send_order_notification_socket()
+            send_order_notification_socket(order_obj.branch.branch_code)
+            send_bar_order_notification_socket(order_obj.branch.branch_code)
             return bill
         except Exception as e:
             print("Error occured while creating bill for validated data", validated_data)
             raise e
+
 
 
 class BillDetailSerializer(ModelSerializer):

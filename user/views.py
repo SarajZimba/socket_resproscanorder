@@ -12,7 +12,7 @@ from django.views.generic import (
 from root.utils import DeleteMixin, remove_from_DB
 from user.permission import IsAdminMixin
 
-from .forms import UserCreateForm, UserForm, AdminForm
+from .forms import UserCreateForm, UserForm, AdminForm, AgentKitchenBarForm
 
 
 User = get_user_model()
@@ -160,3 +160,59 @@ class AgentUpdate(AgentMixin, UpdateView):
 
 class AgentDelete(AgentMixin, DeleteMixin, View):
     pass
+
+
+from user.models import AgentKitchenBar
+class AgentKitchenBarMixin():
+    model = AgentKitchenBar
+    form_class = AgentKitchenBarForm
+    paginate_by = 50
+    queryset = AgentKitchenBar.objects.filter(status=True)
+    success_url = reverse_lazy("user:agentkitchenbar_list")
+    search_lookup_fields = ["username", "email", "full_name"]
+
+
+class AgentKitchenBarList(AgentKitchenBarMixin, ListView):
+    template_name = "agentkitchenbar/agentkitchenbar_list.html"
+    # queryset = AgentKitchenBar.objects.filter(status=True, is_deleted=False).exclude(groups__name__in=['agent'])
+
+    # def get_queryset(self, *args, **kwargs):
+    #     queryset = self.queryset.exclude(id=self.request.user.id)
+    #     return queryset
+
+
+class AgentKitchenBarDetail(AgentKitchenBarMixin, DetailView):
+    template_name = "agentkitchenbar/agentkitchenbar_detail.html"
+
+
+class AgentKitchenBarCreate(AgentKitchenBarMixin, CreateView):
+    template_name = "create.html"
+
+    # def form_valid(self, form):
+    #     user_groups = form.cleaned_data.get('user_type')
+    #     object = form.save()
+    #     for group in user_groups:
+    #         object.groups.add(group)
+    #     return super().form_valid(form)
+
+class AgentKitchenBarAdmin(AgentKitchenBarMixin, CreateView):
+    template_name = "create.html"
+
+
+class AgentKitchenBarUpdate(AgentKitchenBarMixin, UpdateView):
+    template_name = "update.html"
+
+    # def form_valid(self, form):
+    #     user_groups = form.cleaned_data.get('user_type')
+    #     object = form.save()
+    #     for g in Group.objects.all():
+    #         object.groups.remove(g)
+    #     for group in user_groups:
+    #         object.groups.add(group)
+    #     return super().form_valid(form)
+
+
+class AgentKitchenBarDelete(AgentKitchenBarMixin, View):
+    def get(self, request):
+        status = remove_from_DB(self, request)
+        return JsonResponse({"deleted": status})

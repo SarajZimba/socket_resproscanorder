@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from bill.models import Bill, Order, VoidBillTracker
+from bill.models import Bill, Order, VoidBillTracker, OrderDetails
 from api.serializers.terminal_switch import BillSerializer, TableLayoutSerializer, TableSerializer
 import jwt
 from organization.models import PrinterSetting, Terminal, Branch, Table_Layout, Table
@@ -29,6 +29,8 @@ env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 from rest_framework import status
+
+from order.utils import give_last_kot_bot
 
 class Custom306Exception(APIException):
     status_code = status.HTTP_306_RESERVED
@@ -138,6 +140,8 @@ class BillListView(APIView):
             filtered_trackers = VoidBillTracker.objects.filter(prev_bill__contains=f"-{switched_to_terminal}-", bill_new__is_end_day=False, bill_prev__is_end_day=False)
     
             voidbilltracker = VoidBillSerializer(filtered_trackers, many=True)
+
+            last_kot, last_bot = give_last_kot_bot(bills, orders_without_bill)
     
             details = {
                 "switched_from" : switched_from_terminal,
@@ -151,7 +155,9 @@ class BillListView(APIView):
                 "sale" : serializer.data,
                 "remaining_orders" : formatted_json, 
                 "void_bill_trackers" : voidbilltracker.data,
-                "jwttoken": jwt_token_encoded
+                "jwttoken": jwt_token_encoded,
+                "last_kot":last_kot,
+                "last_bot":last_bot
             }
             switched_to_terminal_obj = Terminal.objects.get(terminal_no=switched_to_terminal, branch=Branch.objects.get(pk=int(branch_id)), is_deleted=False, status=True)
             DeviceTracker.objects.filter(terminal=switched_to_terminal_obj).delete()
@@ -260,24 +266,21 @@ class LogoutTerminalStatus(APIView):
             print("Token has expired.")
         except jwt.DecodeError:
             print("Token is invalid.")
+        except Exception as e:
+            print(e)
         data = request.data
+        print(token_data)
+        print(data)
         switched_to_terminal = data['terminal']
-        # branch = data['branch']
-
-        
-
-
-        # if Terminal.objects.get(terminal_no=terminal, branch=branch_obj).is_active == True:
-        #     raise serializers.ValidationError("Terminal is already active")
         try:
             terminal_obj = Terminal.objects.get(terminal_no=int(switched_to_terminal), branch=Branch.objects.get(pk=int(branch)), status=True, is_deleted=False)
         except Exception as e:
-            raise APIException("Terminal with that id does not exist")
+            return Response("Terminal with that id does not exist", 306)
         
         try:
             devicetracker_obj = DeviceTracker.objects.get(deviceId=deviceId, terminal = terminal_obj, status=True)
         except Exception as e:
-            raise APIException("No device logged in with the given terminal")
+             return Response("No device logged in with the given terminal", 306)
         
         devicetracker_obj.status = False
         # terminal_obj.active_count -= 1
@@ -286,7 +289,8 @@ class LogoutTerminalStatus(APIView):
             'is_active' : devicetracker_obj.status
         }
         return Response(data)
-        
+
+from order.utils import give_last_kot_bot 
 class BillListFetchTerminalView(APIView):
     def post(self, request, *args, **kwargs):
         # print(request)
@@ -354,6 +358,9 @@ class BillListFetchTerminalView(APIView):
 
         voidbilltracker = VoidBillSerializer(filtered_trackers, many=True)
 
+
+        last_kot, last_bot = give_last_kot_bot(bills, orders_without_bill)
+
         details = {
             "switched_from" : switched_from_terminal,
             "switched_to": switched_to_terminal,
@@ -365,7 +372,9 @@ class BillListFetchTerminalView(APIView):
             "table_layout": tablelayoutserializer.data,
             "sale" : serializer.data,
             "remaining_orders" : formatted_json,
-            "void_bill_trackers" : voidbilltracker.data
+            "void_bill_trackers" : voidbilltracker.data,
+            "last_kot":last_kot,
+            "last_bot":last_bot
 
         }
         return Response(details)

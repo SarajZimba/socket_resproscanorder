@@ -172,6 +172,9 @@ class TablReturnEntryAPI(ModelViewSet):
 #             return Response({'details': conflict_invoices}, status=409)
 
 #         return Response({'details': 'Bills Created'}, status=201)
+
+from bill.models import tblOrderTracker
+from order.utils import send_bar_order_notification_socket, send_order_notification_socket
 from decimal import Decimal     
 class BulkBillCreateView(APIView):
 
@@ -214,7 +217,7 @@ class BulkBillCreateView(APIView):
                     is_saved = order['is_saved']
                     terminal_no = order['terminal_no']
 
-                    order_obj = Order.objects.create(table_no=table_no, date=date, sale_id=sale_id, terminal=Terminal.objects.get(terminal_no=terminal_no), start_datetime=start_datetime, is_completed=is_completed, no_of_guest=no_of_guest, branch=Branch.objects.get(pk=branch), employee=employee, order_type=order_type, is_saved=is_saved, terminal_no=terminal_no)
+                    order_obj = Order.objects.create(table_no=table_no, date=date, sale_id=sale_id, terminal=Terminal.objects.get(terminal_no=terminal_no,branch=Branch.objects.get(pk=branch)), start_datetime=start_datetime, is_completed=is_completed, no_of_guest=no_of_guest, branch=Branch.objects.get(pk=branch), employee=employee, order_type=order_type, is_saved=is_saved, terminal_no=terminal_no)
 
                     for order_detail_data in order.get('order_details'):
                         product = order_detail_data['product']
@@ -226,6 +229,7 @@ class BulkBillCreateView(APIView):
                         employee = order_detail_data['employee']
                         rate = order_detail_data['rate']
                         OrderDetails.objects.create(order=order_obj, product=Product.objects.get(pk=product), product_quantity=product_quantity, kotID=kotID, ordertime=ordertime, employee=employee, botID=botID, modification=modification, rate=rate)
+                        tblOrderTracker.objects.create(order=order_obj, product=Product.objects.get(pk=product), product_quantity=product_quantity, kotID=kotID, ordertime=ordertime, employee=employee, botID=botID, modification=modification, rate=rate)
                         # orderdetails_dict = {
                         #     'orderdetails'
                         # }
@@ -285,6 +289,7 @@ class BulkBillCreateView(APIView):
                         employee = order_detail_data['employee']
                         rate = order_detail_data['rate']
                         OrderDetails.objects.create(order=order_obj, product=Product.objects.get(pk=product), product_quantity=product_quantity, kotID=kotID, ordertime=ordertime, employee=employee, botID=botID, modification=modification, rate=rate)
+                        tblOrderTracker.objects.create(order=order_obj, product=Product.objects.get(pk=product), product_quantity=product_quantity, kotID=kotID, ordertime=ordertime, employee=employee, botID=botID, modification=modification, rate=rate)
 
 
                     #To update the scanpay orderdetails in case of device went offline after accepting the order 
@@ -322,11 +327,13 @@ class BulkBillCreateView(APIView):
                         else:
                             print("The scanpay data was not valid")
                     
-                    
+
 
         if conflict_invoices:
             return Response({'details': conflict_invoices}, status=409)
 
+        send_order_notification_socket(order_obj.branch.branch_code)
+        send_bar_order_notification_socket(order_obj.branch.branch_code)
         # return Response({'details': 'Bills Created'}, status=201)
         return Response(orders_list, status=201)
 

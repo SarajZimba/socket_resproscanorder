@@ -74,7 +74,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "root.wsgi.application"
-
+ASGI_APPLICATION = 'root.asgi.application'
 
 # DATABASES = {
 #     "default": {
@@ -133,7 +133,7 @@ LOGIN_REDIRECT_URL = "/organization"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "user.authenticate.CustomTerminalAuthentication",
+        # "user.authenticate.CustomTerminalAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -193,3 +193,9 @@ CRONJOBS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}

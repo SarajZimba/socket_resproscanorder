@@ -1,6 +1,7 @@
 from datetime import datetime
 from django.contrib.auth import get_user_model
 
+
 from django.db import models
 from django.dispatch import receiver
 from organization.models import Organization, Branch, Terminal, Table
@@ -158,8 +159,11 @@ class OrderDetails(BaseModel):
     ordertime = models.CharField(max_length = 255, null=True, blank=True)
     employee = models.CharField(max_length=255, null=True , blank=True)
     rate = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-
+    done = models.BooleanField(default=False)
+    seen = models.BooleanField(default=False)
+    completed_time = models.CharField(max_length=255, null=True, blank=True)
+    completed_from = models.CharField(max_length=255, null=True, blank=True)
+    total_time = models.CharField(max_length=255, null=True, blank=True)
 
 class BillItem(BaseModel):
     agent = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -459,3 +463,39 @@ class FutureOrderDetails(BaseModel):
 
 
 
+class tblOrderTracker(BaseModel):
+    order = models.ForeignKey(Order, models.CASCADE, null=True, blank=True)
+    product = models.ForeignKey(Product, models.CASCADE, null=True, blank=True)
+    product_quantity = models.PositiveBigIntegerField(default=1)
+    kotID = models.CharField(max_length=255, null=True, blank=True)
+    botID = models.CharField(max_length=255, null=True, blank=True)
+    modification = models.CharField(max_length=255, null=True, blank=True)
+    ordertime = models.CharField(max_length = 255, null=True, blank=True)
+    employee = models.CharField(max_length=255, null=True , blank=True)
+    rate = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    done = models.BooleanField(default=False)
+    seen = models.BooleanField(default=False)
+    completed_time = models.CharField(max_length=255, null=True, blank=True)
+    completed_from = models.CharField(max_length=255, null=True, blank=True)
+    total_time = models.CharField(max_length=255, null=True, blank=True)
+    average_prep_time = models.CharField(max_length=255, null=True, blank=True)
+    state = models.CharField(max_length=100, default='Normal', null=True, blank=True)
+    prep_time_difference = models.CharField(max_length=255, null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+    reason = models.CharField(max_length=255, null=True, blank=True)
+
+
+@receiver(post_save, sender=tblOrderTracker)
+def save_average_prep_time(sender, instance, created, **kwargs):
+    if created:
+        average_prep_time_of_product = instance.product.average_prep_time
+
+        # Check if average_prep_time_of_product is not None
+        if average_prep_time_of_product:
+            # Convert the TimeField to string in HH:MM:SS format
+            average_prep_time_str = average_prep_time_of_product.strftime("%H:%M:%S")
+            # Save it in the tblOrderTracker instance
+            instance.average_prep_time = average_prep_time_str
+            
+            # Save the instance to update the average_prep_time
+            instance.save()

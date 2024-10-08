@@ -53,3 +53,39 @@ class AgentViewSet(viewsets.ViewSet):
         else:
         
             return Response({"detail":"User with the username or email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from user.models import AgentKitchenBar
+from rest_framework.permissions import AllowAny
+
+class AgentKitchenBarLoginView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        data = request.data
+
+        # Extract username and password from the request
+        usercode = data.get('username')
+        password = data.get('password')
+
+        # Check if the user exists
+        users = AgentKitchenBar.objects.filter(username=usercode)
+
+        # Handle cases based on the number of users found
+        if users.count() == 0:
+            return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+        elif users.count() > 1:
+            return Response({'error': 'More than one user with the same username exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Only one user found, get the user object
+        user = users.first()
+
+        # Check the password
+        if user.check_password(password):  # This method verifies the hashed password
+            # Optionally, return user details or a token
+            return Response({'full_name': user.full_name, 'email': user.email}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+        

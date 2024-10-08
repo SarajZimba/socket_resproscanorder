@@ -108,8 +108,9 @@ class MakeVoidBill(APIView):
 
 
 from order.models import ScanPayOrder, ScanPayOrderDetails
-  
-from bill.models import FutureOrder, FutureOrderDetails        
+from order.utils import send_bar_order_notification_socket, send_order_notification_socket
+from bill.models import FutureOrder, FutureOrderDetails, tblOrderTracker  
+from django.db.models import Q       
 class VoidBillItemView(APIView):
 
     def post(self, request, *args, **kwargs):
@@ -203,7 +204,91 @@ class VoidBillItemView(APIView):
         count = void_item['count']
         isBefore = void_item['isBefore']
         reason = void_item['reason']
+        void_kot = void_item['kotId']
+        void_bot = void_item['botId']
+        print(f"kot {void_kot}")
+        print(f"bot {void_bot}")
+        print(f"void_qty {qty}")
         BillItemVoid.objects.create(quantity=qty, product=Product.objects.get(id=product), count=count, isBefore=isBefore, order=order_obj, reason=reason)
+        total_quantity_ordertracker = 0
+        existing_ordertrackers = tblOrderTracker.objects.filter(order=order_obj, product=Product.objects.get(id=product))
+        for existing_ordertracker in existing_ordertrackers:
+            total_quantity_ordertracker += existing_ordertracker.product_quantity
+        existing_ordertrackers_notcompleted = tblOrderTracker.objects.filter(order=order_obj, product=Product.objects.get(id=product), is_completed=False, state='Normal')
+        void_quantity = qty
+        if existing_ordertrackers_notcompleted.exists():
+            for ordertracker in existing_ordertrackers_notcompleted:
+
+                if void_quantity > 0:
+                    
+                    if ordertracker.product_quantity <= void_quantity:
+                        tblOrderTracker.objects.create(order=order_obj, product=Product.objects.get(id=product), product_quantity=ordertracker.product_quantity, kotID=ordertracker.kotID, botID=ordertracker.botID, done=ordertracker.done, seen=ordertracker.seen, state='Void', is_completed=ordertracker.is_completed, ordertime=ordertracker.ordertime, reason=reason)
+                        # total_quantity_ordertracker -= ordertracker.quantity
+                        void_quantity -= ordertracker.product_quantity
+                        ordertracker.product_quantity = 0
+
+                        ordertracker.delete()
 
 
+                    else:
+                        ordertracker.product_quantity -= void_quantity
+                        # total_quantity_ordertracker -= void_quantity
+
+                        tblOrderTracker.objects.create(order=order_obj, product=Product.objects.get(id=product), product_quantity=void_quantity, kotID=ordertracker.kotID, botID=ordertracker.botID, state='Void',is_completed=ordertracker.is_completed, done=ordertracker.done, seen=ordertracker.seen, ordertime=ordertracker.ordertime, reason=reason)
+                        ordertracker.save()
+                        void_quantity = 0
+                        break
+                else:
+                    break
+
+        if void_quantity != 0:
+            completed_queryset = tblOrderTracker.objects.filter(order=order_obj, product=Product.objects.get(id=product), is_completed=True, state='Normal')
+            if completed_queryset.exists():
+                existing_ordertrackers_completed = tblOrderTracker.objects.filter(order=order_obj, product=Product.objects.get(id=product), is_completed=True, state='Normal')
+
+                if existing_ordertrackers_completed:
+                    for ordertracker in existing_ordertrackers_completed:
+
+                        if void_quantity > 0:
+                            
+                            if ordertracker.product_quantity <= void_quantity:
+                                tblOrderTracker.objects.create(order=order_obj, product=Product.objects.get(id=product), product_quantity=ordertracker.product_quantity, kotID=ordertracker.kotID, botID=ordertracker.botID, state='Void', is_completed=ordertracker.is_completed, done=ordertracker.done, seen=ordertracker.seen,ordertime=ordertracker.ordertime, reason=reason)
+                                # total_quantity_ordertracker -= ordertracker.quantity
+                                void_quantity -= ordertracker.product_quantity
+                                ordertracker.product_quantity = 0
+                                ordertracker.delete()
+
+
+                            else:
+                                ordertracker.product_quantity -= void_quantity
+                                # total_quantity_ordertracker -= void_quantity
+                                tblOrderTracker.objects.create(order=order_obj, product=Product.objects.get(id=product), product_quantity=void_quantity, kotID=ordertracker.kotID, botID=ordertracker.botID, state='Void',is_completed=ordertracker.is_completed, done=ordertracker.done, seen=ordertracker.seen,ordertime=ordertracker.ordertime, reason=reason)
+                                ordertracker.save()
+                                break
+                        else:
+                            break
+
+        # tblOrderTracker.objects.create(order=order_obj, product=Product.objects.get(id=product), product_quantity=qty, kotID=void_kot, botID=void_bot, state='Void')
+            # if order_obj.tblordertracker_set.filter(~Q(kotID=None)).exists():
+            #     if not order_obj.tblordertracker_set.filter(~Q(botID=None)).exists():
+            #         send_order_notification_socket(order_obj.branch.branch_code)
+            # if order_obj.tblordertracker_set.filter(~Q(botID=None)).exists():
+
+            #     if not order_obj.tblordertracker_set.filter(~Q(kotID=None) ).exists():
+            #         send_bar_order_notification_socket(order_obj.branch.branch_code)
+            # if order.tblordertracker_set.filter(~Q(botID=None)).exists():
+
+            #     if  order_obj.tblordertracker_set.filter(~Q(kotID=None) ).exists():
+            #         send_order_notification_socket(order_obj.branch.branch_code)
+            #         send_bar_order_notification_socket(order_obj.branch.branch_code)
+        if void_bot is not None:
+            send_bar_order_notification_socket(order_obj.branch.branch_code)
+        if void_kot is not None:
+            send_order_notification_socket(order_obj.branch.branch_code)
+     
+        # send_order_notification_socket(order_obj.branch.branch_code)
+        # send_bar_order_notification_socket(order_obj.branch.branch_code)
         return Response("VoidItems Created Successfully", status=status.HTTP_200_OK)
+    
+
+

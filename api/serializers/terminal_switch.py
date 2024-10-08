@@ -65,6 +65,7 @@ class TableSerializer(serializers.ModelSerializer):
 
 class BillItemSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
+    print_display = serializers.SerializerMethodField()
     class Meta:
         model = BillItem
         fields = [
@@ -74,11 +75,15 @@ class BillItemSerializer(serializers.ModelSerializer):
             "amount",
             "kot_id",
             "bot_id",
-            "type"
+            "type",
+            "print_display"
         ]
         
     def get_type(self, obj):
         return obj.product.type.title
+    
+    def get_print_display(self, obj):
+        return obj.product.print_display
 
 class PaymentModeSerializer(serializers.ModelSerializer):
     saleId = serializers.SerializerMethodField()

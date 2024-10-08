@@ -42,3 +42,69 @@ class VoidBillAPIView(APIView):
         
         return Response(void_list, 200)
 
+from bill.models import tblOrderTracker
+from api.serializers.order import tblOrderTrackerSerializer
+# class VoidOrderTrackerAPIView(APIView):
+#     def get(self, request, *args, **kwargs):
+#         voidordertrackers = tblOrderTracker.objects.filter(
+#             state='Void')
+        
+#         serializer = tblOrderTrackerSerializer(voidordertrackers, many=True)
+
+#         return Response(serializer.data, 200)
+
+from django.db.models import Q
+from django.db.models.functions import Cast
+from django.db.models import DateTimeField
+from django.utils import timezone
+from datetime import datetime
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+
+class VoidOrderTrackerAPIView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        start_date = request.data.get('start_date', None)
+        end_date = request.data.get('end_date', None)
+
+        product_type = request.data.get('product_type', None)
+        # If no dates are provided, filter by today's date
+        if not start_date and not end_date:
+            today = timezone.now().date()
+            voidordertrackers = tblOrderTracker.objects.filter(
+                state='Void',
+                ordertime__startswith=today.strftime("%Y-%m-%d")
+            )
+        else:
+            # Parse the dates
+            try:
+                start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            except ValueError:
+                return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Convert dates to strings in the format "YYYY-MM-DD"
+            start_date_str = start_date.strftime("%Y-%m-%d")
+            end_date_str = end_date.strftime("%Y-%m-%d")
+
+            if product_type:
+                if product_type == "Kitchen":
+                    # Filter void order trackers based on date range by matching the string
+                    voidordertrackers = tblOrderTracker.objects.filter(
+                        Q(state='Void'),
+                        Q(ordertime__gte=f"{start_date_str} 00:00:00 PM"),  # Adjusting time for the string format
+                        Q(ordertime__lte=f"{end_date_str} 11:59:59 PM"),     # Adjusting time for the string format
+                        ~Q(kotID=None)
+                    )
+                if product_type == "Bar":
+                    # Filter void order trackers based on date range by matching the string
+                    voidordertrackers = tblOrderTracker.objects.filter(
+                        Q(state='Void'),
+                        Q(ordertime__gte=f"{start_date_str} 00:00:00 PM"),  # Adjusting time for the string format
+                        Q(ordertime__lte=f"{end_date_str} 11:59:59 PM"),     # Adjusting time for the string format
+                        ~Q(botID=None)
+                    )
+
+        serializer = tblOrderTrackerSerializer(voidordertrackers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -19,7 +19,7 @@ class ProductCategory(BaseModel):
 
     def __str__(self):
         return self.title
-
+from datetime import time
 from PIL import Image
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -75,21 +75,22 @@ class Product(BaseModel):
     menutype = models.ForeignKey(
         'menu.Menutype', on_delete=models.CASCADE, null=True, blank=True
     )
-    
-    def save(self, *args, **kwargs):
-        self.price = round(self.price, 2)
-        return super().save(*args, **kwargs)
-
+    print_choices = (
+            ("KITCHEN", "KITCHEN"),
+            ("FOOD", "FOOD")
+        )
+    print_display = models.CharField(max_length=255, choices=print_choices, null=True, blank=True)
+    average_prep_time = models.TimeField(default=time(0, 0, 0), null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} - Rs. {self.price} per {self.unit}"
         
     def save(self, *args, **kwargs):
-        # Check if is_taxable is False and there is a taxbracket selected
-        # if not self.is_taxable and self.taxbracket:
-        #     self.taxbracket = None
-
-        # if not self.thumbnail:  # Only generate thumbnail if it doesn't exist
+        self.price = round(self.price, 2)
+        if self.type.title.lower() == "food":
+            self.print_display = "KITCHEN"
+        if self.type.title.lower() == "bar":
+            self.print_display = "BAR"
         self.thumbnail = self.generate_thumbnail()
 
         super().save(*args, **kwargs)
@@ -155,6 +156,7 @@ def reverse_accounting_after_void(sender, instance, created, **kwargs):
 class ProductRecipie(BaseModel):
     product = models.OneToOneField(Product, on_delete=models.CASCADE)
     items = models.JSONField()
+    instruction = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f'Recipies for {self.product.title}'

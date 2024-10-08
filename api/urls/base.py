@@ -19,7 +19,8 @@ from .mail import urlpatterns as mail_urlpatterns
 from  .void import urlpatterns as void_urlpatterns
 from .mobilepayment_type import urlpatterns as mobile_urlpatterns
 from .futureorder import urlpatterns as futureorder_urlpatterns 
-
+from .test_socket import urlpatterns as test_socket_urlpatterns
+from .recipie import urlpatterns as recipie_urpatterns
 
 # scanpay
 from api.scanpay.urls.base import scanpay_urlpatterns
@@ -28,5 +29,5 @@ from api.scanpay.urls.base import scanpay_urlpatterns
 
 
 urlpatterns = (
-    [] + user_urlpatterns + product_urlpatterns + bill_urlpatterns + org_urlpatterns+discount_urlspatterns+ accounting_urlpatterns + purchase_urlpatterns + end_day_urls + end_day_check_urls + table_urlpatterns+ branch_urlpatterns + order_urlpatterns + terminal_switch_urlpatterns  + master_urlpatterns + today_transaction_urlpatterns + void_bill_urlpatterns+ overview_urlpatterns+ mail_urlpatterns+ void_urlpatterns+mobile_urlpatterns+ futureorder_urlpatterns + scanpay_urlpatterns
+    [] + user_urlpatterns + product_urlpatterns + bill_urlpatterns + org_urlpatterns+discount_urlspatterns+ accounting_urlpatterns + purchase_urlpatterns + end_day_urls + end_day_check_urls + table_urlpatterns+ branch_urlpatterns + order_urlpatterns + terminal_switch_urlpatterns  + master_urlpatterns + today_transaction_urlpatterns + void_bill_urlpatterns+ overview_urlpatterns+ mail_urlpatterns+ void_urlpatterns+mobile_urlpatterns+ futureorder_urlpatterns + scanpay_urlpatterns + test_socket_urlpatterns + recipie_urpatterns
 )

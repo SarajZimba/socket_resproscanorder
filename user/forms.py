@@ -51,6 +51,31 @@ class UserForm(BaseForm, UserCreationForm):
             user.save()
         return user
 
+from user.models import AgentKitchenBar  
+class AgentKitchenBarForm(forms.ModelForm):
+    password1 = forms.CharField(widget=forms.HiddenInput(), required=False)
+    password2 = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["password1"].widget = forms.HiddenInput()
+        self.fields["password1"].required = False
+        self.fields["username"].label = "Usercode"
+
+    class Meta:
+        model = AgentKitchenBar 
+        fields = ["full_name", "username"]
+
+        # def clean_password(self):
+        #     return self.clean_password
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["username"])
+        if commit:
+            user.save()
+        return user
+
 
 from .models import Customer
 

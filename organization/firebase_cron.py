@@ -38,6 +38,7 @@ def send_delivery_notification():
                 # branch=Branch.objects.first()
                     active_users = UserBranchLogin.objects.filter(branch=branch)
                         
+                        
                     if active_users:
                         for user in active_users:
 

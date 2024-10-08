@@ -18,7 +18,21 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return OrderDetails.objects.create(**validated_data)
-    
+
+from bill.models import tblOrderTracker
+class tblOrderTrackerSerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField()
+    class Meta:
+        model = tblOrderTracker
+        fields = ['order', 'product', 'product_quantity', 'botID', 'kotID', 'ordertime', 'employee', 'modification', 'rate', 'reason', 'title']
+
+
+    def create(self, validated_data):
+        return tblOrderTracker.objects.create(**validated_data)
+
+    def get_title(self, obj):
+        return obj.product.title
+
 class CustomOrderSerializer(serializers.ModelSerializer):
     order_details = OrderDetailsSerializer(many=True)
     id = serializers.IntegerField(required=False, allow_null=True)
@@ -44,6 +58,7 @@ class CustomOrderDetailsSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     discount_exempt = serializers.SerializerMethodField()
     group = serializers.SerializerMethodField()
+    print_display = serializers.SerializerMethodField()
     class Meta:
         model = OrderDetails
         exclude = [
@@ -116,6 +131,8 @@ class CustomOrderDetailsSerializer(serializers.ModelSerializer):
         
     def get_discount_exempt(self,obj):
         return obj.product.discount_exempt if (obj.product and obj.product.discount_exempt) else None
+    def get_print_display(self,obj):
+        return obj.product.print_display if (obj.product and obj.product.print_display) else None
 
 
     def create(self, validated_data):

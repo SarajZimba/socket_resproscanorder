@@ -10,6 +10,7 @@ from rest_framework.permissions import AllowAny
 
 
 class OrderCreateAPIView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, format=None):
         order_serializer = OrderSerializer(data=request.data)
         if order_serializer.is_valid():

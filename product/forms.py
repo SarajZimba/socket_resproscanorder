@@ -20,9 +20,14 @@ class ProductCategoryForm(BaseForm, forms.ModelForm):
 
 
 from .models import Product
-
+from datetime import time
 
 class ProductForm(BaseForm, forms.ModelForm):
+    average_prep_time_minutes = forms.IntegerField(
+        required=False,
+        label="Average Prep Time (minutes)",
+        help_text="Enter the average preparation time in minutes."
+    )
     class Meta:
         model = Product
         fields = "__all__"
@@ -36,7 +41,24 @@ class ProductForm(BaseForm, forms.ModelForm):
             "thumbnail",
             "description",
             "product_id",
+            # "average_prep_time"
         ]
+    def save(self, commit=True):
+        product = super().save(commit=False)
+
+        minutes = self.cleaned_data.get('average_prep_time_minutes')
+        print(f"Minutes input: {minutes}")  # Debugging line
+        if minutes is not None and minutes >= 0:    
+            hours = minutes // 60
+            minutes = minutes % 60
+            product.average_prep_time = time(hour=hours, minute=minutes)
+            print(f"Saving average_prep_time as: {product.average_prep_time}")  # Debugging line
+        else:
+            product.average_prep_time = None
+
+        if commit:
+            product.save()
+        return product
 
 
 from .models import CustomerProduct
@@ -88,7 +110,7 @@ class ProductRecipieForm(BaseForm, forms.ModelForm):
     items = forms.ModelChoiceField(queryset=Product.objects.filter(is_deleted=False), required=False)
     class Meta:
         model = ProductRecipie
-        fields = 'product',
+        fields = 'product', 'instruction'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

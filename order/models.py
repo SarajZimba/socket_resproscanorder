@@ -6,6 +6,7 @@ from discounts.models import tbl_discounts
 
 # Create your models here.
 
+
 class ScanPayOrder(BaseModel):
     employee = models.CharField(max_length=155, null=True)
     table_no = models.IntegerField(null=True)

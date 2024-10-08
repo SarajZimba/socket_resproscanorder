@@ -250,6 +250,7 @@ def format_order_json(orders):
                         "isTaxable": order_details.product.is_taxable if (order_details.product and order_details.product.is_taxable) else None,
                         "discount_exempt": order_details.product.discount_exempt if (order_details.product and order_details.product.discount_exempt) else None,
                         "productId": order_details.product.id if (order_details.product) else None,
+                        "print_display": order_details.product.print_display if (order_details.product) else None,
                         "saleId": order.sale_id,
                         "product_quantity": order_details.product_quantity,
                         "kotID": int(order_details.kotID) if order_details.kotID is not None else None,

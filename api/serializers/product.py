@@ -34,7 +34,8 @@ class ProductSerializer(ModelSerializer):
             "group",
             "reconcile",
             "discount_exempt",
-            "type"
+            "type",
+            "print_display"
         ]
         
     def get_item_name(self, obj):

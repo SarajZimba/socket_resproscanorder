@@ -57,3 +57,11 @@ urlpatterns += [
     path("agent/<int:pk>/update/", AgentUpdate.as_view(), name="agent_update"),
     path("agent/delete", AgentDelete.as_view(), name="agent_delete"),
 ]
+
+from .views import AgentKitchenBarCreate, AgentKitchenBarDelete, AgentKitchenBarDetail, AgentKitchenBarList, AgentKitchenBarUpdate
+urlpatterns += [
+    path("kitchenbar-agent/", AgentKitchenBarList.as_view(), name="agentkitchenbar_list"),
+    path("kitchenbar-agent/create/", AgentKitchenBarCreate.as_view(), name="agentkitchenbar_create"),
+    path("kitchenbar-agent/<int:pk>/update/", AgentKitchenBarUpdate.as_view(), name="agentkitchenbar_update"),
+    path("kitchenbar-agent/delete", AgentKitchenBarDelete.as_view(), name="agentkitchenbar_delete"),
+]

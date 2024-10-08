@@ -570,10 +570,18 @@ class ProductRecipieCreate(ProductRecipieMixin, CreateView):
     def post(self, request: HttpRequest, *args: str, **kwargs: Any) -> HttpResponse:
         product_id = request.POST.get('product')
         items = request.POST.get('recipie_items', [])
+        instruction = request.POST.get('instruction', None)
         if product_id and items:
             try:
+                print(items)
                 items = json.loads(items)
-                ProductRecipie.objects.create(product_id=product_id, items=items)
+                for item in items:
+                    print(item['id'])
+                    item['title'] = Product.objects.get(id=int(item['id'])).title
+                    item['quantity'] = float(item['quantity'])
+                    print(items)
+
+                ProductRecipie.objects.create(product_id=product_id, items=items, instruction=instruction)
             except IntegrityError:
                 pass
             except Exception as e:

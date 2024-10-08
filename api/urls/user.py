@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework import routers
 
-from ..views.user import CustomTokenObtainPairView, CustomerAPI
+from ..views.user import CustomTokenObtainPairView, CustomerAPI, AgentKitchenBarLoginView
 
 from ..views.user import AgentViewSet
 
@@ -21,3 +21,11 @@ urlpatterns = [
 
 
 ] + router.urls
+
+urlpatterns += [
+    path("kitchenbar-login/", AgentKitchenBarLoginView.as_view(), name="login"),
+
+    
+
+
+] 
