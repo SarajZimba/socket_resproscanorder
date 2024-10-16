@@ -23,7 +23,4 @@ urlpatterns = [
     path('send-notification/', SendNotification.as_view(), name='send-notification'),
 
 
-
-
-
 ] + router.urls

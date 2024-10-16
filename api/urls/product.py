@@ -23,3 +23,9 @@ urlpatterns = [
     path('product-group/', ProductGroupAPIView.as_view(), name='product-group'),
 ] + router.urls
 
+from api.views.product import ProductActivateDeactivate, ProductStatus
+urlpatterns += [
+    path('product-changestatus/<int:id>/<str:outlet>/', ProductActivateDeactivate.as_view(), name='change-productstatus'),
+    path('product-status/<int:id>/', ProductStatus.as_view(), name='give-productstatus')
+]
+

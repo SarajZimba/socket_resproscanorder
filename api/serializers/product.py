@@ -35,7 +35,8 @@ class ProductSerializer(ModelSerializer):
             "reconcile",
             "discount_exempt",
             "type",
-            "print_display"
+            "print_display",
+            "status"
         ]
         
     def get_item_name(self, obj):
@@ -224,3 +225,5 @@ class ProductMasterSerializer(ModelSerializer):
     #         except Exception as e:
     #             print(f"Error encoding the image for {obj}")
     #     return None
+
+

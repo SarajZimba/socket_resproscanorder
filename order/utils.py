@@ -1055,7 +1055,7 @@ def send_updateorder_notification_socket_kitchen(order):
             "max_prep_time": 0
         })
     
-    ordertracker = order.tblordertracker_set.order_by('id').last()
+    ordertracker = order.tblordertracker_set.filter(~Q(kotID=None)).order_by('id').last()
 
     updated_kot = ""
     # for ordertracker in ordertrackers:
@@ -1241,7 +1241,7 @@ def send_updateorder_notification_socket_bar(order):
             "max_prep_time": 0
         })
     
-    ordertracker = order.tblordertracker_set.order_by('id').last()
+    ordertracker = order.tblordertracker_set.filter(~Q(botID=None)).order_by('id').last()
 
     updated_bot = ""
     # for ordertracker in ordertrackers:

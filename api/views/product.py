@@ -459,4 +459,35 @@ class ProductGroupAPIView(APIView):
                 product_groups.append(product.group)
         return Response(product_groups, 200)
 
+from product.utils import send_product_activedeactive_socket
+class ProductActivateDeactivate(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        product_id = kwargs.get('id')
+        outlet = kwargs.get('outlet')
 
+        try:
+            product_obj = Product.objects.get(pk = product_id)
+        except Exception as e:
+            return Response({"detail":"Product doesnot exist"})
+        if product_obj.status == True:
+            product_obj.status = False
+            product_obj.save()    
+        else:
+            product_obj.status = True
+            product_obj.save()       
+        send_product_activedeactive_socket(product_obj, outlet)
+        return Response({"status":product_obj.status}, 200)
+
+class ProductStatus(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        product_id = kwargs.get('id')
+        # outlet = kwargs.get('outlet')
+
+        try:
+            product_obj = Product.objects.get(pk = product_id)
+        except Exception as e:
+            return Response({"detail":"Product doesnot exist"})
+        return Response({"status":product_obj.status, "item_name": product_obj.title, "id": product_obj.id}, 200)
