@@ -72,4 +72,12 @@ urlpatterns += [
     path('p-recipie/<int:pk>/update/', ProductRecipieUpdate.as_view(), name='productrecipie_update'),
     path('p-recipie/<int:pk>/delete', views.productrecipie_delete, name='productrecipie_delete'),
 ]
-               
+
+from .views import tblModificationsList,tblModificationsDetail,tblModificationsCreate,tblModificationsUpdate,tblModificationsDelete
+urlpatterns += [
+path('modifications/', tblModificationsList.as_view(), name='modifications_list'),
+path('modifications/<int:pk>/', tblModificationsDetail.as_view(), name='modifications_detail'),
+path('modifications/create/', tblModificationsCreate.as_view(), name='modifications_create'),
+path('modifications/<int:pk>/update/', tblModificationsUpdate.as_view(), name='modifications_update'),
+path('modifications/delete', tblModificationsDelete.as_view(), name='modifications_delete'),
+]

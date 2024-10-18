@@ -21,7 +21,7 @@ import json
     
 #     send_notification(token, "Delivery needs to be done", "You have a new order", {"orderType": "Dine In"})
 
-
+from bill.models import OrderDetails, tblOrderTracker
 def send_delivery_notification():
     orders = FutureOrder.objects.filter(is_saved=True, is_completed=False, status=True, is_deleted =False, converted_to_normal=False)
     ny_timezone = pytz.timezone('Asia/Kathmandu')
@@ -44,6 +44,7 @@ def send_delivery_notification():
 
                             order_type = order.order_type if order.order_type else ""
                             order_id = order.id 
+                            serverOrderID = order.order.id
                             special_instruction = order.special_instruction if order.special_instruction else ""
                             table_no = order.table_no if order.table_no else ""
                             dateTime = order.start_datetime if order.start_datetime else ""
@@ -55,6 +56,13 @@ def send_delivery_notification():
                             token = user.device_token
                             terminal = order.terminal_no if order.terminal_no else "" 
 
+                            customer_name = order.customer.name if order.customer else ""
+                            mobile_number = order.customer.phone if order.customer else ""
+                            address = order.customer.address if order.customer else ""
+                            # address = order.customer.address if order.customer else ""
+                            loyalty_points = order.customer.loyalty_points if order.customer else "" 
+                            email = order.customer.email if order.customer else "" 
+
                             order_dict = {}
                             
                             if order_type is not None:
@@ -62,6 +70,9 @@ def send_delivery_notification():
                                 
                             if order_id is not None:
                                 order_dict["id"] = str(order_id)
+
+                            if order_id is not None:
+                                order_dict["serverOrderId"] = str(serverOrderID)
                                 
                             if special_instruction is not None:
                                 order_dict["special_instruction"] = str(special_instruction)
@@ -93,6 +104,17 @@ def send_delivery_notification():
                             order_dict["is_future"] = "true"
 
                             order_dict["products"] = []
+
+                            if customer_name is not None:
+                                order_dict["customer_name"] = str(customer_name)
+                            if mobile_number is not None:
+                                order_dict["mobile_number"] = str(mobile_number)
+                            if loyalty_points is not None:
+                                order_dict["loyalty_points"] = str(loyalty_points)
+                            if email is not None:
+                                order_dict["email"] = str(email)
+                            if address is not None:
+                                order_dict["address"] = str(address)
                             
                             for order_details in order.futureorderdetails_set.all():
             
@@ -101,6 +123,10 @@ def send_delivery_notification():
                                 product_quantity = order_details.product_quantity if order_details.product_quantity else 0
                                 product_id = order_details.product.id if order_details.product else ""
                                 
+                                total = round(float(product_quantity) * float(order_details.rate), 2)
+
+
+
                                 products_dict = {}
                                 # Check if title, modification, and product_quantity are not None
                                 if title is not None:
@@ -108,14 +134,11 @@ def send_delivery_notification():
                                 if modification is not None: 
                                     products_dict['modification'] = modification
                                 if product_quantity is not None:
-                                    products_dict['qty'] = str(product_quantity)
+                                    products_dict['quantity'] = product_quantity
                                 if product_id is not None:
-                                    products_dict['product_id'] = str(product_id)
-                                    # products_dict = {
-                                    #     "title": title,
-                                    #     "product_quantity": product_quantity,
-                                    #     "modification": modification
-                                    # }
+                                    products_dict['product_id'] = product_id
+                                if total is not None:
+                                    products_dict['total'] = str(total)
                                 order_dict["products"].append(products_dict)
                             
                             order_dict["products"] = json.dumps(order_dict["products"])
@@ -123,10 +146,16 @@ def send_delivery_notification():
                             final_msg = f"You have a new order in terminal {str(terminal)}"
                             # final_msg = str("You have a new order")
 
+                            # if order.order:
+                            #     order.converted_to_normal = True
+                            #     order.save()
+
                             if token is not None or token != '':
                                 print(f"before {order_dict}")
                                 send_notification(token, "Delivery needs to be done", final_msg, order_dict)
                                 print(f"after {order_dict}")
+
+                                
                             else:
                                 print("The token is None")
                                 # else:

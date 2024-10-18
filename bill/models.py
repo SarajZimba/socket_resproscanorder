@@ -437,7 +437,8 @@ class FutureOrder(BaseModel):
     converted_to_normal = models.BooleanField(default=False)
     special_instruction = models.CharField(max_length = 100, null=True, blank=True)
     bill = models.OneToOneField(Bill, models.CASCADE, null=True, blank=True)
-    order = models.OneToOneField(Order, models.CASCADE, null=True, blank=True )
+    # order = models.OneToOneField(Order, models.CASCADE, null=True, blank=True )
+    order = models.ForeignKey(Order, models.CASCADE, null=True, blank=True )
 
 # @receiver(post_save, sender=Order)
 # def change_table_status(sender, instance, created, **kwargs):

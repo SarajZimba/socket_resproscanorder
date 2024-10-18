@@ -58,6 +58,8 @@ class CustomOrderDetailsSerializer(serializers.ModelSerializer):
     product_id = serializers.SerializerMethodField()
     menu_id = serializers.SerializerMethodField()
 
+    # current_state = serializers.SerializerMethodField()
+
     class Meta:
         model = ScanPayOrderDetails
         exclude = [
@@ -75,6 +77,9 @@ class CustomOrderDetailsSerializer(serializers.ModelSerializer):
     def get_menu_id(self, obj):
         menu_id = Menu.objects.get(item_name=obj.itemName).id
         return menu_id
+    
+    # def get_current_state(self, obj):
+        
 from django.utils import timezone
 import pytz   
 from order.utils import get_terminal

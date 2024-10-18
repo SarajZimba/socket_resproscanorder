@@ -24,10 +24,10 @@ from .recipie import urlpatterns as recipie_urpatterns
 
 # scanpay
 from api.scanpay.urls.base import scanpay_urlpatterns
-
+from .modifications import urlpatterns as modifications_urlpatterns
 
 
 
 urlpatterns = (
-    [] + user_urlpatterns + product_urlpatterns + bill_urlpatterns + org_urlpatterns+discount_urlspatterns+ accounting_urlpatterns + purchase_urlpatterns + end_day_urls + end_day_check_urls + table_urlpatterns+ branch_urlpatterns + order_urlpatterns + terminal_switch_urlpatterns  + master_urlpatterns + today_transaction_urlpatterns + void_bill_urlpatterns+ overview_urlpatterns+ mail_urlpatterns+ void_urlpatterns+mobile_urlpatterns+ futureorder_urlpatterns + scanpay_urlpatterns + test_socket_urlpatterns + recipie_urpatterns
+    [] + user_urlpatterns + product_urlpatterns + bill_urlpatterns + org_urlpatterns+discount_urlspatterns+ accounting_urlpatterns + purchase_urlpatterns + end_day_urls + end_day_check_urls + table_urlpatterns+ branch_urlpatterns + order_urlpatterns + terminal_switch_urlpatterns  + master_urlpatterns + today_transaction_urlpatterns + void_bill_urlpatterns+ overview_urlpatterns+ mail_urlpatterns+ void_urlpatterns+mobile_urlpatterns+ futureorder_urlpatterns + scanpay_urlpatterns + test_socket_urlpatterns + recipie_urpatterns + modifications_urlpatterns
 )

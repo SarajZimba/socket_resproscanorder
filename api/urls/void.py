@@ -8,5 +8,4 @@ urlpatterns = [
 from api.views.void import VoidOrderTrackerAPIView
 urlpatterns += [
     path('void-ordertrackers/', VoidOrderTrackerAPIView.as_view(), name='void-ordertrackers'),
-
 ]

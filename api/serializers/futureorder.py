@@ -5,7 +5,7 @@ from datetime import datetime
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = FutureOrder
-        fields = ['id', 'table_no', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'terminal_no',  'customer', 'delivery_time', 'special_instruction']
+        fields = ['id', 'table_no', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'terminal_no',  'customer', 'delivery_time', 'special_instruction', 'order']
 
     def create(self, validated_data):
         return FutureOrder.objects.create(**validated_data)
@@ -14,7 +14,7 @@ class FutureOrderSerializer(serializers.ModelSerializer):
     customer_name = serializers.SerializerMethodField()
     class Meta:
         model = FutureOrder
-        fields = ['id', 'table_no', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'terminal_no',  'customer', 'customer_name', 'delivery_time', 'special_instruction']
+        fields = ['id', 'table_no', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'terminal_no',  'customer', 'customer_name', 'delivery_time', 'special_instruction', 'order']
         
     def get_customer_name(self, obj):
         return obj.customer.name if obj.customer else None
@@ -42,7 +42,7 @@ class CustomOrderSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     class Meta:
         model = FutureOrder
-        fields = ['id', 'table_no', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'order_details', 'terminal_no', 'customer', 'delivery_time']
+        fields = ['id', 'table_no', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'order_details', 'terminal_no', 'customer', 'delivery_time', 'order']
 
     # def create(self, validated_data):
     #     return Order.objects.create(**validated_data)
@@ -146,7 +146,7 @@ class CustomOrderWithOrderDetailsSerializer(serializers.ModelSerializer):
     tableNumber = serializers.SerializerMethodField()
     class Meta:
         model = FutureOrder
-        fields = ['id', 'tableNumber', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'products', 'bot', 'kot', 'terminal_no', 'customer']
+        fields = ['id', 'tableNumber', 'date', 'sale_id', 'terminal', 'start_datetime', 'is_completed', 'no_of_guest', 'branch', 'employee', 'order_type', 'is_saved', 'products', 'bot', 'kot', 'terminal_no', 'customer', 'order']
 
     def get_bot(self, obj):
         return int(obj.futureorderdetails_set.first().botID) if (obj.futureorderdetails_set.first() is not None and obj.futureorderdetails_set.first().botID is not None)else None

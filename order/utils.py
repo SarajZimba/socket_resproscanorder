@@ -63,6 +63,7 @@ def get_terminal_obj(branch, table):
     return None
         
 import json
+
 def send_order_notification(instance, state):
     print("I am inside")
     outlet=instance.outlet

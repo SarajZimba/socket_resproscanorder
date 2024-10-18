@@ -647,3 +647,31 @@ class ProductPointsUpdate(ProductPointsMixin, UpdateView):
 
 class ProductPointsDelete(ProductPointsMixin, DeleteMixin, View):
     pass
+
+
+from .models import tblModifications
+from .forms import tblModificationsForm
+
+class tblModificationsMixin:
+    model = tblModifications
+    form_class = tblModificationsForm
+    paginate_by = 20
+    queryset = tblModifications.objects.filter(status=True,is_deleted=False)
+    success_url = reverse_lazy('modifications_list')
+
+
+class tblModificationsList(tblModificationsMixin, ListView):
+    template_name = "modifications/modifications_list.html"
+    queryset = tblModifications.objects.filter(status=True,is_deleted=False)
+
+class tblModificationsDetail(tblModificationsMixin, DetailView):
+    template_name = "modifications/modificaitons_detail.html"
+
+class tblModificationsCreate(tblModificationsMixin, CreateView):
+    template_name = "create.html"
+
+class tblModificationsUpdate(tblModificationsMixin, UpdateView):
+    template_name = "update.html"
+
+class tblModificationsDelete(tblModificationsMixin, DeleteMixin, View):
+    pass

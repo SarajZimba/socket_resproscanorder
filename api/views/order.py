@@ -118,7 +118,6 @@ class OrderCreateAPIView(APIView):
                     order_detail_data['quantity'] = quantity
                     order_detail_data['total'] = Decimal(rate) * Decimal(quantity)
 
-
                     scanpay_order_data.append(order_detail_data)
                 print(f"scanpay orderdetails data after changing {scanpay_order_data}")
                 scanpay_order_details_serializer = NormalToScanPayOrderDetailsSerializer(data=scanpay_order_data, many=True)
@@ -126,115 +125,11 @@ class OrderCreateAPIView(APIView):
                     scanpay_order_details_serializer.save()
                 else:
                     print("The scanpay data was not valid")
-
-            # send_updateorder_notification_socket_kitchen(Order.objects.get(pk=order_id))
-            # send_updateorder_notification_socket_bar(Order.objects.get(pk=order_id))
-            # if Order.objects.get(pk=order_id).tblordertracker_set.filter(~Q(kotID=None)).exists():
-            #     if not Order.objects.get(pk=order_id).tblordertracker_set.filter(~Q(botID=None)).exists():
-            #         send_updateorder_notification_socket_kitchen(Order.objects.get(pk=order_id))
-            # if Order.objects.get(pk=order_id).tblordertracker_set.filter(~Q(botID=None)).exists():
-
-            #     if not Order.objects.get(pk=order_id).tblordertracker_set.filter(~Q(kotID=None) ).exists():
-            #         send_updateorder_notification_socket_bar(Order.objects.get(pk=order_id))
-            # if Order.objects.get(pk=order_id).tblordertracker_set.filter(~Q(botID=None)).exists():
-
-            #     if Order.objects.get(pk=order_id).tblordertracker_set.filter(~Q(kotID=None) ).exists():
-            #         send_updateorder_notification_socket_bar(Order.objects.get(pk=order_id))
-            #         send_updateorder_notification_socket_kitchen(Order.objects.get(pk=order_id))
-            # send_order_notification_socket()
-            # send_bar_order_notification_socket()
             return Response(order_details_serializer.data, status=status.HTTP_201_CREATED)
             
         else:
             return Response(order_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
-    # def patch(self, request, format=None):
-    #     order_details_data = request.data
-
-    #     for order_detail_data in order_details_data:
-    #         order_id = order_detail_data.get('order')
-    #         if not order_id:
-    #             return Response({"error": "Order ID is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-    #     order_details_serializer = OrderDetailsSerializer(data=request.data, many=True)
-        
-    #     if order_details_serializer.is_valid():
-    #         with transaction.atomic():
-    #             # Delete existing OrderDetails associated with the specified Order ID
-    #             # for order_detail_data in order_details_data:
-    #             #     OrderDetails.objects.filter(order=order_detail_data['order']).delete()
-
-    #             # Save new OrderDetails
-    #             order_details_serializer.save()
-        
-    #         future_order = FutureOrder.objects.filter(order=order_detail_data['order']).order_by('id').first()
-    #         print(f"future_order {future_order}")
-    #         future_order_data = []
-    #         if future_order:
-    #             for order_detail_data in order_details_data:
-    #                 # FutureOrderDetails.objects.filter(order=future_order).delete()
-    #                 print(f"This is the future order id {future_order.id}")
-    #                 print()
-    #                 order_detail_data['order'] = int(future_order.id)
-    #                 future_order_data.append(order_detail_data)
-    #             print(future_order_data)
-    #             future_order_details_serializer = FutureOrderDetailsSerializer(data=future_order_data, many=True)
-    #             if future_order_details_serializer.is_valid():
-    #                 future_order_details_serializer.save()
-    #             else:
-    #                 print("The future data was not valid")
-                    
-    #         from order.models import ScanPayOrder, ScanPayOrderDetails
-    #         from api.scanpay.serializers.order import NormalToScanPayOrderDetailsSerializer
-    #         scanpay_orders = ScanPayOrder.objects.filter(outlet_order=order_detail_data['order'])
-    #         print(f"scanpay_order {scanpay_orders}")
-    #         print(f"scanpay orderdetails data before changing {order_details_data}")
-    #         order_details_scanpay = Order.objects.get(pk=order_id).orderdetails_set.all()
-    #         scanpay_order_data = []
-    #         if scanpay_orders:
-    #             print(f"In this {scanpay_orders}")
-    #             for order in scanpay_orders:
-
-    #                 prev_orderdetails = ScanPayOrderDetails.objects.filter(order=order)
-    #                 for orderdetails in prev_orderdetails:
-    #                     orderdetails.delete()
-    #             scanpay_order = scanpay_orders.order_by('id').first()
-    #             for order_detail_data in order_details_scanpay:
-    #                 print(f"This is the scanpay order id {scanpay_order.id}")
-    #                 # order_detail_data['order'] = int(scanpay_order.id)
-    #                 scanpay_order_detail_data = {
-    #                     "order" : int(scanpay_order.id)
-    #                 }
-    #                 quantity = order_detail_data.product_quantity
-    #                 productId = order_detail_data.product.id
-    #                 rate = order_detail_data.rate
-    #                 scanpay_order_detail_data['itemName'] = Product.objects.get(pk=int(productId)).title
-    #                 scanpay_order_detail_data['quantity'] = quantity
-    #                 scanpay_order_detail_data['total'] = Decimal(rate) * Decimal(quantity)
-    #                 scanpay_order_detail_data['modification'] = order_detail_data.modification
-    #                 scanpay_order_detail_data['rate'] = order_detail_data.rate
-
-
-
-
-    #                 scanpay_order_data.append(scanpay_order_detail_data)
-    #             print(f"scanpay orderdetails data after changing {scanpay_order_data}")
-    #             scanpay_order_details_serializer = NormalToScanPayOrderDetailsSerializer(data=scanpay_order_data, many=True)
-    #             if scanpay_order_details_serializer.is_valid():
-    #                 scanpay_order_details_serializer.save()
-    #             else:
-    #                 print("The scanpay data was not valid")
-
-    #         # send_order_notification_socket(Order.objects.get(pk=order_id))
-    #         # send_bar_order_notification_socket(Order.objects.get(pk=order_id))
-    #         send_order_notification_socket()
-    #         send_bar_order_notification_socket()
-    #         return Response(order_details_serializer.data, status=status.HTTP_201_CREATED)
-            
-    #     else:
-    #         return Response(order_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+          
             
 class SplitBillAPIView(APIView):
     
@@ -448,3 +343,79 @@ class TestFutureOrder(APIView):
     def get(self, request, *args, **kwargs):
         send_delivery_notification()
         return Response("Future Order sent", 200)
+    
+# class NormalToFutureOrder(APIView):
+#     def patch(self, request, format=None):
+#         order_details_data = request.data
+
+#         for order_detail_data in order_details_data:
+#             order_id = order_detail_data.get('order')
+#             if not order_id:
+#                 return Response({"error": "Order ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+#         order_details_serializer = OrderDetailsSerializer(data=request.data, many=True)
+        
+#         if order_details_serializer.is_valid():
+#             with transaction.atomic():
+#                 # Delete existing OrderDetails associated with the specified Order ID
+#                 check_and_insert_updated_item(request.data)
+#                 # for order_detail_data in order_details_data:
+#                 #     OrderDetails.objects.filter(order=order_detail_data['order']).delete()
+
+#                 # Save new OrderDetails
+#                 order_details_serializer.save()
+
+
+        
+#             # future_order = FutureOrder.objects.filter(order=order_detail_data['order']).order_by('id').first()
+#             # print(f"future_order {future_order}")
+#             # future_order_data = []
+#             # if future_order:
+#             #     for order_detail_data in order_details_data:
+#             #         FutureOrderDetails.objects.filter(order=future_order).delete()
+#             #         print(f"This is the future order id {future_order.id}")
+#             #         print()
+#             #         order_detail_data['order'] = int(future_order.id)
+#             #         future_order_data.append(order_detail_data)
+#             #     print(future_order_data)
+#             #     future_order_details_serializer = FutureOrderDetailsSerializer(data=future_order_data, many=True)
+#             #     if future_order_details_serializer.is_valid():
+#             #         future_order_details_serializer.save()
+#             #     else:
+#             #         print("The future data was not valid")
+                    
+#             # from order.models import ScanPayOrder, ScanPayOrderDetails
+#             # from api.scanpay.serializers.order import NormalToScanPayOrderDetailsSerializer
+#             # scanpay_orders = ScanPayOrder.objects.filter(outlet_order=order_detail_data['order'])
+#             # print(f"scanpay_order {scanpay_orders}")
+#             # print(f"scanpay orderdetails data before changing {order_details_data}")
+#             # scanpay_order_data = []
+#             # if scanpay_orders:
+#             #     print(f"In this {scanpay_orders}")
+#             #     for order in scanpay_orders:
+
+#             #         prev_orderdetails = ScanPayOrderDetails.objects.filter(order=order)
+#             #         for orderdetails in prev_orderdetails:
+#             #             orderdetails.delete()
+#             #     scanpay_order = scanpay_orders.order_by('id').first()
+#             #     for order_detail_data in order_details_data:
+#             #         print(f"This is the scanpay order id {scanpay_order.id}")
+#             #         order_detail_data['order'] = int(scanpay_order.id)
+#             #         quantity = order_detail_data.pop('product_quantity', None)
+#             #         productId = order_detail_data.pop('product', None)
+#             #         rate = order_detail_data.get('rate', None)
+#             #         order_detail_data['itemName'] = Product.objects.get(pk=int(productId)).title
+#             #         order_detail_data['quantity'] = quantity
+#             #         order_detail_data['total'] = Decimal(rate) * Decimal(quantity)
+
+#             #         scanpay_order_data.append(order_detail_data)
+#             #     print(f"scanpay orderdetails data after changing {scanpay_order_data}")
+#             #     scanpay_order_details_serializer = NormalToScanPayOrderDetailsSerializer(data=scanpay_order_data, many=True)
+#             #     if scanpay_order_details_serializer.is_valid():
+#             #         scanpay_order_details_serializer.save()
+#             #     else:
+#             #         print("The scanpay data was not valid")
+#             return Response(order_details_serializer.data, status=status.HTTP_201_CREATED)
+            
+#         else:
+#             return Response(order_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

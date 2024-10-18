@@ -165,4 +165,10 @@ class ProductPointsUpdateForm(BaseForm, forms.ModelForm):
         ]
 
 
- 
+from .models import tblModifications
+
+class tblModificationsForm(BaseForm, forms.ModelForm):
+    class Meta:
+        model = tblModifications
+        fields = '__all__'
+        exclude = [ 'sorting_order', 'is_featured', 'is_deleted', 'status', 'deleted_at',]

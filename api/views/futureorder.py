@@ -299,7 +299,6 @@ class FutureToNormalOrderUpdateAPIView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, pk, normalorder, *args, **kwargs):
         try:
-
             instance = FutureOrder.objects.get(pk=pk)
         except FutureOrder.DoesNotExist:
             return Response({"error": "FutureOrder not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -343,10 +342,16 @@ class FutureToCancelledOrderUpdateAPIView(APIView):
         try:
             futureorder = FutureOrder.objects.get(id=futureorder_id)
         except FutureOrder.DoesNotExist:
-            return Response("No future order found hacing such id", 400)
+            return Response("No future order found having such id", 400)
         futureorder.status = False
         futureorder.is_deleted = True
         futureorder.save()
         return Response("Future order has been cancelled", 200)
-    
-    
+        
+    # class FutureOrderUpdatetoNormal(APIView):
+    #     def patch(self, request, *args, **kwargs):
+    #         order = data.get('order', None)
+    #         data = request.data
+
+    #         for orderdetails in data['orderdetails']:
+    #             orderdetails['order'] = order

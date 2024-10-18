@@ -11,11 +11,13 @@ class ProductMultipriceSerializer(ModelSerializer):
     class Meta:
         model = ProductMultiprice
 
-
+from product.models import tblModifications
+from menu.models import Menu
 class ProductSerializer(ModelSerializer):
     # image_bytes = serializers.SerializerMethodField()
     item_name = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
+    modifications = serializers.SerializerMethodField()  # Add this field
     class Meta:
         model = Product
         fields = [
@@ -36,19 +38,25 @@ class ProductSerializer(ModelSerializer):
             "discount_exempt",
             "type",
             "print_display",
-            "status"
+            "status",
+            "modifications"  # Include the modifications field here
         ]
         
     def get_item_name(self, obj):
         return obj.title
     def get_type(self, obj):
         return obj.type.title
-    # def get_image_bytes(self, obj):
-    #     if obj.thumbnail:
-    #         with open(obj.thumbnail.path, "rb") as image_file:
-    #             encoded_string = base64.b64encode(image_file.read())
-    #             return encoded_string.decode('utf-8')
-    #     return None
+    def get_modifications(self, obj):
+        # Retrieve the related Menu item based on the Product
+        menu_item = Menu.objects.filter(resproproduct=obj).first()
+
+        # If the menu item exists, fetch related modifications from tblModifications
+        if menu_item:
+            modifications = tblModifications.objects.filter(product=menu_item).values_list('modification', flat=True)
+            return list(modifications)  # Return as a list of modification strings
+
+        # If no menu item or modifications, return an empty list
+        return []
         
 class ProductSerializerCreate(ModelSerializer):
     class Meta:

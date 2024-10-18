@@ -54,61 +54,127 @@ class ProductMultipriceapi(ListAPIView):
 
 from root.utils import get_image_bytes
 
+# class ProductTypeListView(ListAPIView):
+#     permission_classes = [AllowAny]
+#     serializer_class = ProductCategorySerializer
+#     pagination_class = None
+
+#     def list(self, request, *args, **kwargs):
+       
+#         products = Product.objects.active().all()
+
+#         item_type ={
+#             "FOOD":{
+#                 "title":"FOOD",
+#                 "group": []
+#             },
+#             "BEVERAGE":{
+#                 "title":"BEVERAGE",
+#                 "group": []
+#             },
+#             "OTHERS": {
+#                 "title":"OTHERS",
+#                 "group": []
+#             }
+#         }
+#         type_group = {"FOOD": [],"BEVERAGE": [],"OTHERS": []}
+
+#         product_list = []
+
+#         for product in products:
+#             product_dict =  model_to_dict(product)
+#             del product_dict['image']
+#             product_dict['image'] = product.thumbnail.url if product.thumbnail else None
+#             product_dict['thumbnail'] = get_image_bytes(product)
+#             product_dict['type'] = product.type.title
+#             product_list.append(product_dict)
+
+
+#         for product in product_list:
+#             if  product['group'] not in type_group[product['type']]:
+#                 type_group[product['type']].append(product['group'])
+#                 item_type[product['type']]['group'].append({"title":product['group'], "items":[]})
+        
+#         for product in product_list:
+#             group_list = item_type[product['type']]['group']
+#             for i in group_list:
+#                 if i['title'] == product['group']:
+#                     i['items'].append(product)
+
+
+
+            
+#         return Response(item_type)
+
+from product.models import tblModifications
+from menu.models import Menu
 class ProductTypeListView(ListAPIView):
+    permission_classes = [AllowAny]
     serializer_class = ProductCategorySerializer
     pagination_class = None
 
     def list(self, request, *args, **kwargs):
-       
+        # Retrieve all active products
         products = Product.objects.active().all()
 
-        item_type ={
-            "FOOD":{
-                "title":"FOOD",
+        item_type = {
+            "FOOD": {
+                "title": "FOOD",
                 "group": []
             },
-            "BEVERAGE":{
-                "title":"BEVERAGE",
+            "BEVERAGE": {
+                "title": "BEVERAGE",
                 "group": []
             },
             "OTHERS": {
-                "title":"OTHERS",
+                "title": "OTHERS",
                 "group": []
             }
         }
-        type_group = {"FOOD": [],"BEVERAGE": [],"OTHERS": []}
+        type_group = {"FOOD": [], "BEVERAGE": [], "OTHERS": []}
 
         product_list = []
 
         for product in products:
-            product_dict =  model_to_dict(product)
+            product_dict = model_to_dict(product)
             del product_dict['image']
+
+            # Set image URLs and other fields
             product_dict['image'] = product.thumbnail.url if product.thumbnail else None
             product_dict['thumbnail'] = get_image_bytes(product)
             product_dict['type'] = product.type.title
+
+            # Retrieve the menu item related to this product
+            menu_item = Menu.objects.filter(resproproduct=product).first()
+
+            # Get modifications related to the menu item, if exists
+            modifications = tblModifications.objects.filter(product=menu_item).values_list('modification', flat=True) if menu_item else []
+            
+            # Add modifications to the product_dict
+            product_dict['modifications'] = list(modifications)
+
             product_list.append(product_dict)
 
-
+        # Group products by type and add them to the item_type
         for product in product_list:
-            if  product['group'] not in type_group[product['type']]:
+            if product['group'] not in type_group[product['type']]:
                 type_group[product['type']].append(product['group'])
-                item_type[product['type']]['group'].append({"title":product['group'], "items":[]})
-        
+                item_type[product['type']]['group'].append({"title": product['group'], "items": []})
+
+        # Add products to their respective groups
         for product in product_list:
             group_list = item_type[product['type']]['group']
             for i in group_list:
                 if i['title'] == product['group']:
                     i['items'].append(product)
 
-
-
-            
         return Response(item_type)
 
         
 
 
 class ProductList(ListAPIView):
+    permission_classes = [AllowAny]
     serializer_class = ProductSerializer
     pagination_class = None
 

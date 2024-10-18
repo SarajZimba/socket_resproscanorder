@@ -441,7 +441,7 @@ class CustomerGoogleRegister(APIView):
                 'contact_number': customer.phone,
                 'dob': customer.dob,
                 'exist_already': True, 
-                'total_points':customer.total_points,
+                'total_points':customer.loyalty_points,
                 'type': 'Google'
 
                 # Add any other customer details you want to include
@@ -462,7 +462,7 @@ class CustomerGoogleRegister(APIView):
                     'contact_number': customer.phone,
                     'dob': customer.dob,
                     'exist_already': True,
-                    'total_points':customer.total_points
+                    'total_points':customer.loyalty_points
 
 
                     # Add any other customer details you want to include
@@ -486,7 +486,7 @@ class CustomerGoogleRegister(APIView):
                     'contact_number': customer.phone,
                     'dob': customer.dob,
                     'exist_already': False,
-                    'total_points':customer.total_points
+                    'total_points':customer.loyalty_points
 
 
                     # Add any other customer details you want to include

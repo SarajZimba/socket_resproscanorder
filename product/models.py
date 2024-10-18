@@ -77,7 +77,7 @@ class Product(BaseModel):
     )
     print_choices = (
             ("KITCHEN", "KITCHEN"),
-            ("FOOD", "FOOD")
+            ("BAR", "BAR")
         )
     print_display = models.CharField(max_length=255, choices=print_choices, null=True, blank=True)
     average_prep_time = models.TimeField(default=time(0, 0, 0), null=True, blank=True)
@@ -299,5 +299,11 @@ class CustomerProductPointsTrack(BaseModel):
     action = models.CharField(null=True, blank=True, max_length=20)
     remaining_points = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     bill_no = models.CharField(max_length=255, null=True, blank=True)
+
+
+class tblModifications(BaseModel):
+
+    product = models.ForeignKey('menu.Menu', models.CASCADE, null=True, blank=True)
+    modification = models.CharField(max_length=100, null=True, blank=True)
 
 

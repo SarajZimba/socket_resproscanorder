@@ -162,3 +162,61 @@ class MasterEndDay(APIView):
         return Response({"detail": "Endday has been done successfully"}, status=status.HTTP_200_OK)
 
 
+
+class BranchTotalEndDay(APIView):
+    def get(self, request, *args, **kwargs):
+        jwt_token = self.request.META.get("HTTP_AUTHORIZATION")
+        jwt_token = jwt_token.split()[1]
+        try:
+            token_data = jwt.decode(jwt_token, options={"verify_signature": False})  # Disable signature verification for claims extraction
+            user_id = token_data.get("user_id")
+            username = token_data.get("name")
+            role = token_data.get("role")
+            # You can access other claims as needed
+
+            # Assuming "branch" is one of the claims, access it
+            branch = token_data.get("branch")
+
+            # Print the branch
+            print("Branch:", branch)
+        except jwt.ExpiredSignatureError:
+            print("Token has expired.")
+        except jwt.DecodeError:
+            print("Token is invalid.")
+        branch = Branch.objects.get(id=branch, is_deleted=False, status=True)
+        from datetime import date
+        today = date.today()
+
+        enddays = EndDayDailyReport.objects.filter(branch=branch, created_date=today)
+
+        # Aggregate the sums of all the required fields
+        totals = enddays.aggregate(
+            total_net_sales=Sum('net_sales'),
+            total_vat=Sum('vat'),
+            total_discounts=Sum('total_discounts'),
+            total_cash=Sum('cash'),
+            total_credit=Sum('credit'),
+            total_credit_card=Sum('credit_card'),
+            total_mobile_payment=Sum('mobile_payment'),
+            total_complimentary=Sum('complimentary'),
+            total_void_count=Sum('total_void_count'),
+            total_food_sale=Sum('food_sale'),
+            total_beverage_sale=Sum('beverage_sale'),
+            total_others_sale=Sum('others_sale'),
+            total_no_of_guest=Sum('no_of_guest'),
+            total_dine_grandtotal=Sum('dine_grandtotal'),
+            total_delivery_grandtotal=Sum('delivery_grandtotal'),
+            total_takeaway_grandtotal=Sum('takeaway_grandtotal'),
+            total_dine_nettotal=Sum('dine_nettotal'),
+            total_delivery_nettotal=Sum('delivery_nettotal'),
+            total_takeaway_nettotal=Sum('takeaway_nettotal'),
+            total_dine_vattotal=Sum('dine_vattotal'),
+            total_delivery_vattotal=Sum('delivery_vattotal'),
+            total_takeaway_vattotal=Sum('takeaway_vattotal'),
+        )
+
+        # Return the calculated totals in the response
+        return Response({
+            "branch": branch.name,
+            "totals": totals
+        }, 200)
