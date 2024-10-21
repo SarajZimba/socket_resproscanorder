@@ -149,11 +149,11 @@ def format_order_json(orders):
 
 
     for order in orders:
-        try:
-            future_order = order.futureorder  # Accessing the related FutureOrder instance
+        future_order = order.futureorder_set.exists() # Accessing the related FutureOrder instance
             # If 'future_order' is accessed without exception, it means a FutureOrder exists
+        if future_order:
             is_future = True
-        except ObjectDoesNotExist:
+        else:
             # If ObjectDoesNotExist exception is raised, no FutureOrder exists
             is_future = False
 

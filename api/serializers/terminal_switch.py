@@ -196,11 +196,12 @@ class BillSerializer(serializers.ModelSerializer):
         return obj.order.order_type if obj.order else None
 
     def get_is_future(self, obj):
-        try:
-            future_order = obj.order.futureorder  # Accessing the related FutureOrder instance
-            # If 'future_order' is accessed without exception, it means a FutureOrder exists
+        
+        future_order = obj.order.futureorder_set.exists()  # Accessing the related FutureOrder instance
+        # If 'future_order' is accessed without exception, it means a FutureOrder exists
+        if future_order:
             is_future = True
-        except ObjectDoesNotExist:
+        else:
             # If ObjectDoesNotExist exception is raised, no FutureOrder exists
             is_future = False
         return is_future
