@@ -61,10 +61,12 @@ class AgentKitchenBarForm(forms.ModelForm):
         self.fields["password1"].widget = forms.HiddenInput()
         self.fields["password1"].required = False
         self.fields["username"].label = "Usercode"
+        from organization.models import Branch
+        self.fields['branch'] = forms.ModelChoiceField(queryset=Branch.objects.filter(is_deleted=False, status=True))
 
     class Meta:
         model = AgentKitchenBar 
-        fields = ["full_name", "username"]
+        fields = ["full_name", "username", "branch"]
 
         # def clean_password(self):
         #     return self.clean_password

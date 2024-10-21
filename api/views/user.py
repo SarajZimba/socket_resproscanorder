@@ -85,7 +85,7 @@ class AgentKitchenBarLoginView(APIView):
         # Check the password
         if user.check_password(password):  # This method verifies the hashed password
             # Optionally, return user details or a token
-            return Response({'full_name': user.full_name, 'email': user.email}, status=status.HTTP_200_OK)
+            return Response({'full_name': user.full_name, 'email': user.email, 'branch':user.branch.branch_code if user.branch else None}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
         
