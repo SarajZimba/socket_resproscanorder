@@ -17,6 +17,7 @@
         </style>
   </head>
   <body>
+    {% if combine_data %}
     <h3>Here is the summary report for today</h3>
     <p>{{combine_data.org_name}}</p>
     <p>Date: {{combine_data.date_now}}</p>
@@ -37,7 +38,7 @@
             <td>{{ combine_data.total_discounts }}</td>
         </tr>
     </table>
-
+    {% endif %}
     <h1>Terminal Data</h1>
     {% for terminal in terminals_data %}
     <!--<h3>Terminal : {{terminal.terminal}}<h3/>-->
