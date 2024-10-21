@@ -31,6 +31,7 @@
                      <th class="min-w-125px sorting" tabindex="0" >Full Name</th>
                      <th class="min-w-125px sorting" tabindex="0" > Email</th>
                      <th class="min-w-125px sorting" tabindex="0" >  Username</th>
+                     <th class="min-w-125px sorting" tabindex="0" >  Branch</th>
                      <th class="min-w-125px sorting" tabindex="0" > Status</th>
                      <th class="text-end min-w-70px sorting_disabled" rowspan="1" colspan="1" aria-label="Actions"
                         style="width: 125.287px;">Actions</th>
@@ -49,6 +50,7 @@
                      <td>{{object.full_name}}</td>
                      <td>{{object.email}}</td>
                      <td>{{object.username}}</td>
+                     <td>{{object.branch.branch_code}}</td>
                      <td>{%include 'components/status.html' with status=object.status%}</td>
                      <td class="text-end">
                         <a href="#" class="btn btn-sm btn-light btn-active-light-primary" data-kt-menu-trigger="click"

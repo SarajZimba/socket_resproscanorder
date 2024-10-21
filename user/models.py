@@ -207,7 +207,7 @@ class AgentKitchenBar(AbstractBaseUser, BaseModel):
     username = models.CharField(max_length=255, null=True, blank=False)
     address = models.CharField(max_length=255, null=True, blank=True)
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
-    branch = models.OneToOneField(Branch, models.CASCADE, null=True, blank=True)
+    branch = models.ForeignKey(Branch, models.CASCADE, null=True, blank=True)
 
     USERNAME_FIELD = 'username'
 
