@@ -209,15 +209,13 @@ class EndDayDailyReport(BaseModel):
         self.total_sale = self.net_sales + self.vat
         return super().save()
 
-# class CashDrop(models.Model):
-#     branch_id = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
-#     branch = models.CharField(max_length=200, null=True, blank=True)
-#     opening_balance = models.FloatField(default=0.0)
-#     datetime = models.CharField(max_length=200)
-#     cashdrop_amount = models.FloatField(default=0.0)
-#     employee = models.CharField(max_length=100)
-#     expense = models.FloatField(default=0.0, null=True, blank=True)
-#     remaining_balance = models.FloatField(default=0.0, null=True, blank=True)  
+from datetime import datetime
+@receiver(post_save, sender=EndDayDailyReport)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        from .master_end_day import fetch_details_for_one_endday
+
+        fetch_details_for_one_endday(instance)
 
 class CashDrop(models.Model):
     branch_id = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)

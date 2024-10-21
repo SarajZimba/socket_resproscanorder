@@ -51,3 +51,17 @@ def convert_to_dict(value):
         return total_per_type_dict
     else:
         return None
+    
+def send_single_mail_to_receipients(terminals_data,mail_list, sender):
+    email_body = render_to_string('organization/combined_end_day_report_list.html', {'terminals_data':terminals_data})
+    try:
+        send_mail(
+            'End Day Report',
+            '',
+            sender,
+            mail_list,
+            fail_silently=False,
+            html_message=email_body
+        )
+    except Exception as e:
+        print("Exception Occured", e)

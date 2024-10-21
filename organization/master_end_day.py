@@ -588,3 +588,182 @@ def fetch_details():
             print(f"Error in sending combined mail: {e}")
     else:
         print("Endday has not been created")
+
+
+from datetime import datetime
+from django.dispatch import receiver
+import environ
+env = environ.Env(DEBUG=(bool, False))
+from organization.utils import send_single_mail_to_receipients
+from threading import Thread
+from organization.utils import get_mobilepayments, convert_to_dict
+
+# sending mail for only the endday that is being triggered
+def fetch_details_for_one_endday(instance):
+    print("I am in")
+    # current_date = datetime.now().date().strftime('%Y-%m-%d')
+    # current_date = '2024-03-31'
+    # print(f"timezone {timezone.now()}")
+    ny_timezone = pytz.timezone('Asia/Kathmandu')
+    current_datetime_ny = timezone.now().astimezone(ny_timezone)
+
+    formatted_date = current_datetime_ny.strftime("%Y-%m-%d")
+    transaction_date = current_datetime_ny.date()
+
+    enddays_terminal = []
+
+    # combine_data = {}
+    # total_sale_holder = 0.0
+    # net_sales_holder = 0.0
+    # discount_holder = 0.0
+    # tax_holder = 0.0
+
+    # Use instance directly instead of enddays
+    endday = instance
+
+    sender = env('EMAIL_HOST_USER')
+    mail_list = []
+    recipients = MailRecipient.objects.filter(status=True)
+    for r in recipients:
+        mail_list.append(r.email)
+        MailSendRecord.objects.create(mail_recipient=r)
+    if mail_list:
+
+        dt_now = datetime.now()
+        date_now = dt_now.date()
+        time_now = dt_now.time().strftime('%I:%M %p')
+        org = Organization.objects.first().org_name
+
+        mobilepaymenttype_queryset, total_per_type = get_mobilepayments(endday.branch, endday.terminal)
+        mobilepaymenttype_dict = convert_to_dict(total_per_type) if mobilepaymenttype_queryset else None
+
+        from bill.models import Bill
+        bills = Bill.objects.filter(transaction_date=transaction_date, branch=endday.branch, terminal=endday.terminal)
+        total_transactions = bills.count()
+        total_grand_total_by_category = {}
+
+        for bill in bills:
+            for bill_item in bill.bill_items.all():
+                product_category = bill_item.product.type.title
+
+                total_grand_total_by_category[product_category] = (
+                    total_grand_total_by_category.get(product_category, 0) + bill_item.amount 
+                )
+
+        print(total_grand_total_by_category)
+
+        cashdrops = CashDrop.objects.filter(branch_id=endday.branch, datetime__startswith=formatted_date)
+        print(f"CashDrops: {cashdrops}")  
+        
+        total_expense = cashdrops.aggregate(Sum('expense'))['expense__sum'] or 0.0
+        total_cashdrop = cashdrops.aggregate(Sum('cashdrop_amount'))['cashdrop_amount__sum'] or 0.0
+        
+        latest_balance = 0
+        total_expense_cashdrop = total_expense + total_cashdrop
+        latest_cash_drop = cashdrops.last()
+        if latest_cash_drop is not None:
+            latest_balance = latest_cash_drop.opening_balance - latest_cash_drop.cashdrop_amount
+            if latest_cash_drop.expense is not None:
+                latest_balance -= latest_cash_drop.expense
+            if latest_cash_drop.addCash is not None:
+                latest_balance += latest_cash_drop.addCash
+
+        opening_balance = latest_balance + total_expense_cashdrop
+        cash_to_be_added = float(endday.cash)
+        cash_total = latest_balance + cash_to_be_added
+        start_bill_number = int(endday.start_bill.split('-')[-1])
+        end_bill_number = int(endday.end_bill.split('-')[-1])
+        print(start_bill_number)
+        print(end_bill_number)
+
+        bills = Bill.objects.filter(
+            payment_mode="CREDIT",
+            invoice_number__range=[
+                f'{endday.branch.branch_code}-{endday.terminal}-{start_bill_number}',
+                f'{endday.branch.branch_code}-{endday.terminal}-{end_bill_number}'
+            ],
+            branch=endday.branch
+        ).values('invoice_number', 'customer_name', 'grand_total')
+        print("before sorting", bills)
+        sorted_bills = sorted(bills, key=itemgetter('customer_name'))
+        print("after sorting", sorted_bills)
+
+        grouped_bills = {}
+        for key, group in groupby(sorted_bills, key=itemgetter('customer_name')):
+            bills_data = list(group)
+            total_amount = sum(bill_data['grand_total'] for bill_data in bills_data)
+            grouped_bills[key] = {
+                'bills_data': bills_data,
+                'total_amount': total_amount
+            }
+
+        report_data = {
+            'dine_totalsale': endday.dine_grandtotal,
+            'delivery_totalsale': endday.delivery_grandtotal,
+            'takeaway_totalsale': endday.takeaway_grandtotal,
+            'dine_netsale': endday.dine_nettotal, 
+            'delivery_netsale': endday.delivery_nettotal, 
+            'takeaway_netsale': endday.takeaway_nettotal, 
+            'dine_vat': endday.dine_vattotal,
+            'delivery_vat': endday.delivery_vattotal,
+            'takeaway_vat': endday.takeaway_vattotal,   
+            'total_sale': endday.total_sale,
+            'date_time': endday.date_time,
+            'employee_name': endday.employee_name,
+            'net_sales': endday.net_sales,
+            'tax': endday.vat,  
+            'total_discounts': endday.total_discounts,
+            'cash': endday.cash,
+            'credit': endday.credit,
+            'credit_card': endday.credit_card,
+            'mobile_payment': endday.mobile_payment,
+            'complimentary': endday.complimentary,
+            'start_bill': endday.start_bill,
+            'end_bill': endday.end_bill,
+            'branch': endday.branch.name,
+            'terminal': endday.terminal,
+            'total_transactions': total_transactions,
+            'total_grand_total_by_category': total_grand_total_by_category,
+            'grouped_bills': grouped_bills,
+            'food_sale': endday.food_sale,
+            'beverage_sale': endday.beverage_sale,
+            'others_sale': endday.others_sale,
+            'cash_total': cash_total,
+            'latest_balance': latest_balance,
+            'opening_balance': opening_balance,
+            'total_expense': total_expense,
+            'no_of_guest': endday.no_of_guest,
+            'total_cashdrop': total_cashdrop,
+            'mobilepaymenttype_dict': mobilepaymenttype_dict if mobilepaymenttype_dict else None
+        }
+
+        enddays_terminal.append(report_data)
+        # total_sale_holder += endday.total_sale
+        # net_sales_holder += endday.net_sales
+        # discount_holder += endday.total_discounts
+        # tax_holder += endday.vat
+
+        # combine_data = {
+        #     'org_name': org,
+        #     'date_now': date_now,
+        #     'time_now': time_now,
+        #     "total_sale": total_sale_holder,
+        #     "net_sales": net_sales_holder,
+        #     "tax": tax_holder,
+        #     "total_discounts": discount_holder
+        # }
+
+        if mobilepaymenttype_queryset is not None:
+            for payment in mobilepaymenttype_queryset:
+                payment.sent_in_mail = True
+                payment.save()
+
+        print(f"mail_list {mail_list}")
+
+        try:
+            Thread(target=send_single_mail_to_receipients, args=(enddays_terminal, mail_list, sender)).start()
+            print("Mail Sent")
+        except Exception as e:
+            print(f"Error in sending combined mail: {e}")
+    else:
+        print("Mailrecipients has not been created")

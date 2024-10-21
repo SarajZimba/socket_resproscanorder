@@ -220,3 +220,56 @@ class BranchTotalEndDay(APIView):
             "branch": branch.name,
             "totals": totals
         }, 200)
+    
+class LastTerminalCheck(APIView):
+    def get(self, request, *args, **kwargs):
+        jwt_token = self.request.META.get("HTTP_AUTHORIZATION")
+        jwt_token = jwt_token.split()[1]
+        try:
+            token_data = jwt.decode(jwt_token, options={"verify_signature": False})  # Disable signature verification for claims extraction
+            user_id = token_data.get("user_id")
+            username = token_data.get("name")
+            role = token_data.get("role")
+            # You can access other claims as needed
+
+            # Assuming "branch" is one of the claims, access it
+            branch = token_data.get("branch")
+
+            # Print the branch
+            print("Branch:", branch)
+        except jwt.ExpiredSignatureError:
+            print("Token has expired.")
+        except jwt.DecodeError:
+            print("Token is invalid.")
+        branch = Branch.objects.get(id=branch, is_deleted=False, status=True)
+
+        terminal_no = kwargs.get('terminal_no')
+        from datetime import date
+        today = date.today()
+        print(today)
+        terminal = Terminal.objects.filter(branch=branch, terminal_no=int(terminal_no), status=True, is_deleted=False).first()
+
+        all_terminals_for_that_branch = Terminal.objects.filter(Q(branch=branch), ~Q(terminal_no=int(terminal_no)), status=True, is_deleted=False)
+        print(all_terminals_for_that_branch)
+        is_last_terminal = True
+        for terminal in all_terminals_for_that_branch:
+
+            if not EndDayDailyReport.objects.filter(
+                created_date=today, 
+                terminal=str(terminal.terminal_no), 
+                branch=branch).exists():
+                if Bill.objects.filter(is_end_day=False, status=True, terminal=terminal.terminal_no, branch=branch).exists():
+                    is_last_terminal = False
+                    break
+        
+        return Response({'is_last_terminal': is_last_terminal}, 200)
+    
+from organization.master_end_day import fetch_details_for_one_endday
+class MailCheck(APIView):
+
+    def get(self, request):
+        endday = EndDayDailyReport.objects.last()
+
+        fetch_details_for_one_endday(endday)
+
+        return Response("Mail Sent", 200)
