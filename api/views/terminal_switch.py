@@ -333,7 +333,7 @@ class BillListFetchTerminalView(APIView):
         bills = Bill.objects.filter(branch__id=branch_id, terminal=terminal_id, is_end_day=False)
         all_bills = Bill.objects.filter(branch__id=branch_id, terminal=terminal_id)
         serializer = BillSerializer(bills, many=True)
-        printers = PrinterSetting.objects.filter(terminal__terminal_no=terminal_id)
+        printers = PrinterSetting.objects.filter(terminal__terminal_no=terminal_id, terminal__branch__id=branch_id)
         # table_layouts = Table_Layout.objects.filter(branch = Branch.objects.get(pk=branch_id))
         table_layouts = Table.objects.filter(terminal__terminal_no = terminal_id, terminal__branch__id=branch_id)
         tablelayoutserializer = TableSerializer(table_layouts, many=True)

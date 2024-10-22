@@ -382,7 +382,7 @@ import environ
 env = environ.Env(DEBUG=(bool, False))
 from organization.utils import send_combined_mail_to_receipients
 from threading import Thread
-from organization.utils import get_mobilepayments, convert_to_dict
+from organization.utils import get_mobilepayments, convert_to_dict, get_current_fiscal_year
 
 def fetch_details():
     print("I am in")
@@ -484,7 +484,8 @@ def fetch_details():
                         f'{endday.branch.branch_code}-{endday.terminal}-{start_bill_number}',
                         f'{endday.branch.branch_code}-{endday.terminal}-{end_bill_number}'
                     ],
-                    branch=endday.branch
+                    branch=endday.branch, 
+                    fiscal_year=get_current_fiscal_year()
                 ).values('invoice_number', 'customer_name', 'grand_total')
                 print("before sorting", bills)
                 sorted_bills = sorted(bills, key=itemgetter('customer_name'))
@@ -682,7 +683,9 @@ def fetch_details_for_one_endday(instance):
                 f'{endday.branch.branch_code}-{endday.terminal}-{start_bill_number}',
                 f'{endday.branch.branch_code}-{endday.terminal}-{end_bill_number}'
             ],
-            branch=endday.branch
+            branch=endday.branch,
+            fiscal_year=get_current_fiscal_year()
+
         ).values('invoice_number', 'customer_name', 'grand_total')
         print("before sorting", bills)
         sorted_bills = sorted(bills, key=itemgetter('customer_name'))
@@ -767,3 +770,87 @@ def fetch_details_for_one_endday(instance):
             print(f"Error in sending combined mail: {e}")
     else:
         print("Mailrecipients has not been created")
+
+# def get_total_credit_grouped_bills(endday):
+#     start_bill_number = int(endday.start_bill.split('-')[-1])
+#     end_bill_number = int(endday.end_bill.split('-')[-1])
+#     from bill.models import Bill
+#                         # bills = Bill.objects.filter(payment_mode="CREDIT", invoice_number__gte=f'{instance.branch.branch_code}-{instance.terminal}-{start_bill_number}',
+#                         #     invoice_number__lte=f'{instance.branch.branch_code}-{instance.terminal}-{end_bill_number}', branch=instance.branch).values('invoice_number', 'customer_name', 'grand_total')
+#     bills = Bill.objects.filter(
+#             payment_mode="CREDIT",
+#             invoice_number__range=[
+#                             f'{endday.branch.branch_code}-{endday.terminal}-{start_bill_number}',
+#                             f'{endday.branch.branch_code}-{endday.terminal}-{end_bill_number}'
+#                 ],
+#                 branch=endday.branch
+#             ).values('invoice_number', 'customer_name', 'grand_total')
+#     print("before sorting", bills)
+#     sorted_bills = sorted(bills, key=itemgetter('customer_name'))
+                        
+#     print("after sorting", sorted_bills)
+#                         # Group bills by customer_name
+#     grouped_bills = {}
+#     for key, group in groupby(sorted_bills, key=itemgetter('customer_name')):
+#                             # Convert the group iterator to a list of dictionaries
+#         bills_data = list(group)
+                        
+#                             # Calculate the total amount for each customer's bills
+#         total_amount = sum(bill_data['grand_total'] for bill_data in bills_data)
+                        
+#                             # Store the grouped data in a dictionary
+#         grouped_bills[key] = {
+#                             'bills_data': bills_data,
+#                             'total_amount': total_amount
+                        # }
+        
+def get_void_items(bills):
+
+    from bill.models import BillItemVoid
+    # Step 2: Extract the Order instances related to the Bills
+    order_ids = bills.values_list('order', flat=True)
+
+    # Step 3: Filter the BillItemVoid based on the related Orders
+    void_items = BillItemVoid.objects.filter(order__in=order_ids)
+
+    return void_items
+
+from datetime import time
+
+from datetime import time, timedelta
+import pytz  # Make sure to install pytz
+
+def get_lunch_sale(bills):
+    # Define the cutoff time for lunch sales in Nepali time (3 PM)
+    lunch_cutoff_time_npt = time(15, 0)  # 3 PM
+
+    # Nepali time zone
+    nepal_tz = pytz.timezone('Asia/Kathmandu')
+
+    # Calculate the total lunch sales
+    total_lunch_sales = sum(
+        bill.grand_total for bill in bills if (
+            bill.transaction_date_time.astimezone(nepal_tz).time() < lunch_cutoff_time_npt
+        )
+    )
+    
+    
+    return round(float(total_lunch_sales), 2)
+
+
+def get_dinner_sale(bills):
+    # Define the cutoff time for dinner sales in Nepali time (3 PM)
+    dinner_cutoff_time_npt = time(15, 0)  # 3 PM
+
+    # Nepali time zone
+    nepal_tz = pytz.timezone('Asia/Kathmandu')
+
+    # Calculate the total dinner sales
+    total_dinner_sales = sum(
+        bill.grand_total for bill in bills if (
+            bill.transaction_date_time.astimezone(nepal_tz).time() > dinner_cutoff_time_npt
+        )
+    )
+    
+    
+    return round(float(total_dinner_sales), 2)

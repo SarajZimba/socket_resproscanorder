@@ -364,7 +364,7 @@ class BillItemVoid(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     bill_item = models.ForeignKey(BillItem, on_delete=models.CASCADE, null=True, blank=True)
-    quantity = models.IntegerField()
+    # quantity = models.IntegerField()
     reason = models.CharField(max_length=255, null=True, blank=True)
 
 

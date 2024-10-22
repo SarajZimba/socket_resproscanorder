@@ -65,3 +65,13 @@ def send_single_mail_to_receipients(terminals_data,mail_list, sender):
         )
     except Exception as e:
         print("Exception Occured", e)
+
+
+from .models import Organization 
+def get_current_fiscal_year():
+    org = Organization.objects.last()
+
+    fiscal_year = org.current_fiscal_year
+
+    return fiscal_year
+
