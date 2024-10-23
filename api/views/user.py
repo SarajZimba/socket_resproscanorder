@@ -54,7 +54,7 @@ class AgentViewSet(viewsets.ViewSet):
         
             return Response({"detail":"User with the username or email already exists"}, status=status.HTTP_400_BAD_REQUEST)
         
-
+    
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status

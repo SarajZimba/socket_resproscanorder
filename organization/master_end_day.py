@@ -834,6 +834,7 @@ def get_lunch_sale(bills):
         )
     )
     
+    print("lunch_sales", total_lunch_sales)
     
     return round(float(total_lunch_sales), 2)
 
@@ -994,7 +995,7 @@ def calculate_bill_items_total(queryset):
             'rate': item_data['rate'],
             'amount': item_data['quantity'] * item_data['rate'],
             'customer': customer_id,  # This can be customer_name if preferred
-            'customer_name': customer_name
+            # 'customer_name': customer_name
         })
 
     # Convert defaultdict to the desired format: [{customer: 33, items: [...]}, ...]
@@ -1006,10 +1007,10 @@ def calculate_bill_items_total(queryset):
         for items in items_by_category.values():
             all_items.extend(items)  # Merge all category items into one list
             total_amount += sum(item['amount'] for item in items)
-
+        from user.models import Customer
         result.append({
             'customer': customer,
-            'customer_name':customer_name,
+            'customer_name':Customer.objects.get(id=customer).name,
             'items': all_items,
             'total': total_amount  # Include the total amount for the customer
         })
@@ -1105,7 +1106,7 @@ def get_payment_modes_summary(branch):
 
 def get_cash_total(payment_modes_summary):
     # Initialize cash_total to 0
-    cash_total = 0
+    cash_total = 0.0
 
     # Iterate through the payment modes summary
     for item in payment_modes_summary:
@@ -1116,7 +1117,7 @@ def get_cash_total(payment_modes_summary):
     return cash_total
 def get_credit_total(payment_modes_summary):
     # Initialize cash_total to 0
-    cash_total = 0
+    cash_total = 0.0
 
     # Iterate through the payment modes summary
     for item in payment_modes_summary:
@@ -1127,7 +1128,7 @@ def get_credit_total(payment_modes_summary):
     return cash_total
 def get_mobilepayment_total(payment_modes_summary):
     # Initialize cash_total to 0
-    cash_total = 0
+    cash_total = 0.0
 
     # Iterate through the payment modes summary
     for item in payment_modes_summary:
@@ -1138,7 +1139,7 @@ def get_mobilepayment_total(payment_modes_summary):
     return cash_total
 def get_creditcard_total(payment_modes_summary):
     # Initialize cash_total to 0
-    cash_total = 0
+    cash_total = 0.0
 
     # Iterate through the payment modes summary
     for item in payment_modes_summary:
@@ -1149,7 +1150,7 @@ def get_creditcard_total(payment_modes_summary):
     return cash_total
 def get_complimentary_total(payment_modes_summary):
     # Initialize cash_total to 0
-    cash_total = 0
+    cash_total = 0.0
 
     # Iterate through the payment modes summary
     for item in payment_modes_summary:

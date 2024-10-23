@@ -1,6 +1,6 @@
 from django.urls import path
 
-from api.views.end_day import EndDayDailyReportFilterView, MasterEndDay, BranchTotalEndDay, LastTerminalCheck, MailCheck
+from api.views.end_day import EndDayDailyReportFilterView, MasterEndDay, BranchTotalEndDay, LastTerminalCheck, MailCheck, BranchTodaysSalesDateWise
 
 urlpatterns = [
     # Other URL patterns...
@@ -8,6 +8,7 @@ urlpatterns = [
     path('master-endday-mail/', MasterEndDay.as_view(), name='master-endday'),
 
     path('branch-endday-total/', BranchTotalEndDay.as_view(), name='branch-enddaytotals' ),
+    path('branch-total-todayssales/', BranchTodaysSalesDateWise.as_view(), name='branch-total-todayssales' ),
     path('lastterminal-check/<str:terminal_no>', LastTerminalCheck.as_view(), name='branch-enddaytotals' )
 
 ]
