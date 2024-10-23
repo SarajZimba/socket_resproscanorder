@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework import routers
 
-from ..views.master import CustomTokenObtainPairView, CustomerAPI, TerminalUpdateView, MasterBillDetailView
+from ..views.master import CustomTokenObtainPairView, CustomerAPI, TerminalUpdateView, MasterBillDetailView, MasterBillBranch
 
 router = routers.DefaultRouter()
 
@@ -17,5 +17,6 @@ urlpatterns = [
     path("master-terminal-update/", TerminalUpdateView.as_view(), name="master-terminal-update"),
     
     path('master-bill-endday/', MasterBillDetailView.as_view(), name='bill-detail'),
+    path('master-bill-branch/', MasterBillBranch.as_view(), name='bill-silverplatter'),
 
 ] + router.urls

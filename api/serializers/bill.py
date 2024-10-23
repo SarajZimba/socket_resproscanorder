@@ -46,7 +46,7 @@ class BillItemVoidSerializer(ModelSerializer):
     item_void_key = serializers.IntegerField()
     class Meta:
         model = BillItemVoid
-        fields = ["product", "quantity", "bill_item", "item_void_key", "count", "isBefore", "reason"]
+        fields = ["product", "quantity", "bill_item", "item_void_key", "count", "isBefore", "reason", "employee"]
         
 class BillItemVoidSerializerTerminalSwitch(ModelSerializer):
     class Meta:
@@ -75,6 +75,7 @@ from django.db import transaction
 from user.models import Customer
 from product.models import ProductPoints, CustomerProductPointsTrack
 from order.utils import complete_respective_scanpayorders
+from datetime import datetime
 class BillSerializer(ModelSerializer):
     bill_items = BillItemSerializer(many=True)
     agent = serializers.HiddenField(
@@ -285,6 +286,9 @@ class BillSerializer(ModelSerializer):
             
             order_obj.is_saved = False
             order_obj.is_completed = True
+            current_time = datetime.now().strftime('%Y-%m-%d %I:%M:%S %p')
+
+            order_obj.completed_time = current_time
             order_obj.save()
             
             # from organization.models import Table, Terminal
@@ -340,7 +344,7 @@ class BillSerializer(ModelSerializer):
                 for void_item in items_void:
                     if void_item['item_void_key'] == item_void_key:
                         # BillItemVoid.objects.create(product=void_item['product'], bill_item=bill_item, quantity=void_item['quantity'] )
-                        BillItemVoid.objects.create(product=void_item['product'], bill_item=bill_item, quantity=void_item['quantity'], count=void_item['count'], isBefore=void_item['isBefore'], reason=void_item['reason'],order=order_obj)
+                        BillItemVoid.objects.create(product=void_item['product'], bill_item=bill_item, quantity=void_item['quantity'], count=void_item['count'], isBefore=void_item['isBefore'], reason=void_item['reason'],order=order_obj, employee=void_item['employee'])
 
     
                 bill_items.append(bill_item)
@@ -463,3 +467,130 @@ class TablReturnEntrySerializer(ModelSerializer):
 
 class BillCheckSumSerializer(serializers.Serializer):
     bills = BillSerializer(many=True)
+
+from decimal import Decimal
+class SilverPlatterBillItemSerializer(ModelSerializer):
+    item_void_key = serializers.IntegerField(required=False)
+    title = serializers.SerializerMethodField()
+    rate = serializers.SerializerMethodField()
+    amount = serializers.SerializerMethodField()
+    class Meta:
+        model = BillItem
+        fields = [
+            "product_quantity",
+            "product",
+            "rate",
+            "amount",
+            "kot_id",
+            "bot_id",
+            "item_void_key",
+            "title"
+        ]
+
+    def get_title(self, obj):
+        return obj.product.title if obj.product else None
+    def get_rate(self, obj):
+        return Decimal(obj.rate) 
+    def get_amount(self, obj):
+        return Decimal(obj.amount) 
+
+from datetime import datetime
+class SilverPlatterBillSerializer(ModelSerializer):
+    bill_items = SilverPlatterBillItemSerializer(many=True)
+    type = serializers.SerializerMethodField()
+    server = serializers.SerializerMethodField()
+    table_no = serializers.SerializerMethodField()
+    start_time = serializers.SerializerMethodField()
+    end_time = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+    pax = serializers.SerializerMethodField()
+    sub_total = serializers.SerializerMethodField()
+    discount_amount = serializers.SerializerMethodField()
+    taxable_amount = serializers.SerializerMethodField()
+    tax_amount = serializers.SerializerMethodField()
+    grand_total = serializers.SerializerMethodField()
+    service_charge = serializers.SerializerMethodField()
+
+    revenue_per_guest = serializers.SerializerMethodField()
+    class Meta:
+        model = Bill
+        exclude = [
+            "created_at",
+            "updated_at",
+            "status",
+            "is_deleted",
+            "sorting_order",
+            "is_featured",
+        ]
+
+    def get_type(self, obj):
+        return obj.order.order_type if obj.order else None
+    
+    def get_server(self, obj):
+        return obj.order.employee if obj.order else None
+    def get_table_no(self, obj):
+        return obj.order.table_no if obj.order else None
+    def get_start_time(self, obj):
+        if obj.order:
+            if obj.order.start_datetime:
+                # Convert the start_datetime string to a datetime object
+                dt_obj = datetime.strptime(obj.order.start_datetime, '%Y-%m-%d %I:%M:%S %p')
+                # Return only the time part in the desired format (e.g., "02:14:54 PM")
+                return dt_obj.strftime('%I:%M:%S %p')
+            return None
+    def get_end_time(self, obj):
+        if obj.order:
+            if obj.order.completed_time:
+                # Convert the start_datetime string to a datetime object
+                dt_obj = datetime.strptime(obj.order.completed_time, '%Y-%m-%d %I:%M:%S %p')
+                # Return only the time part in the desired format (e.g., "02:14:54 PM")
+                return dt_obj.strftime('%I:%M:%S %p')
+            return None
+        
+    # New method to calculate duration
+    def get_duration(self, obj):
+        if obj.order and obj.order.start_datetime and obj.order.completed_time:
+            try:
+                # Convert both start and end time strings to datetime objects
+                start_time = datetime.strptime(obj.order.start_datetime, '%Y-%m-%d %I:%M:%S %p')
+                end_time = datetime.strptime(obj.order.completed_time, '%Y-%m-%d %I:%M:%S %p')
+
+                # Calculate the time difference
+                duration = end_time - start_time
+
+                # Return the duration in a readable format, e.g., "HH:MM:SS"
+                return str(duration)
+            except ValueError:
+                return None  # Handle cases where date format might be incorrect
+        return None
+
+    def get_revenue_per_guest(self, obj):
+        if obj.order:
+            no_of_guest = obj.order.no_of_guest
+
+            revenue_per_guest = round(float(obj.grand_total)/float(no_of_guest), 2)
+
+            return revenue_per_guest
+        return None
+    
+    def get_pax(self, obj):
+        if obj.order:
+            return obj.order.no_of_guest
+    def get_sub_total(self, obj):
+
+        return Decimal(obj.sub_total)
+    def get_discount_amount(self, obj):
+
+        return Decimal(obj.discount_amount)
+    def get_taxable_amount(self, obj):
+
+        return Decimal(obj.taxable_amount)
+    def get_tax_amount(self, obj):
+
+        return Decimal(obj.tax_amount)
+    def get_grand_total(self, obj):
+
+        return Decimal(obj.grand_total)
+    def get_service_charge(self, obj):
+
+        return Decimal(obj.service_charge)

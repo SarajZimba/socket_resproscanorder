@@ -206,10 +206,11 @@ class VoidBillItemView(APIView):
         reason = void_item['reason']
         void_kot = void_item['kotId']
         void_bot = void_item['botId']
+        employee = void_item['employee']
         print(f"kot {void_kot}")
         print(f"bot {void_bot}")
         print(f"void_qty {qty}")
-        BillItemVoid.objects.create(quantity=qty, product=Product.objects.get(id=product), count=count, isBefore=isBefore, order=order_obj, reason=reason)
+        BillItemVoid.objects.create(quantity=qty, product=Product.objects.get(id=product), count=count, isBefore=isBefore, order=order_obj, reason=reason, employee=employee)
         total_quantity_ordertracker = 0
         existing_ordertrackers = tblOrderTracker.objects.filter(order=order_obj, product=Product.objects.get(id=product))
         for existing_ordertracker in existing_ordertrackers:

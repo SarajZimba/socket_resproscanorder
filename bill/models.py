@@ -132,7 +132,7 @@ class Order(BaseModel):
     is_saved = models.BooleanField(null=True, blank=True, default=True)
     terminal_no = models.PositiveIntegerField(null=True, blank=True)
     customer = models.ForeignKey("user.Customer", on_delete=models.CASCADE, null=True, blank=True)
-
+    completed_time = models.CharField(max_length=255, null=True, blank=True)
     
 @receiver(post_save, sender=Order)
 def change_table_status(sender, instance, created, **kwargs):
@@ -221,7 +221,7 @@ class ConflictBillNumber(BaseModel):
     def __str__(self):
         return self.invoice_number
 
-
+from discount.models import DiscountTable
 class Bill(BaseModel):
     fiscal_year = models.CharField(max_length=20)
     agent = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -259,7 +259,7 @@ class Bill(BaseModel):
     bill_count_number = models.PositiveIntegerField(blank=True, null=True, db_index=True)
     order = models.OneToOneField(Order, models.CASCADE, null=True, blank=True)
     is_end_day= models.BooleanField(default=False)
-    
+    discountId = models.ForeignKey(DiscountTable, models.CASCADE, null=True, blank=True)
     def __str__(self):
         return f"{self.customer_name}-{self.transaction_date}- {self.grand_total}"
     
@@ -364,6 +364,7 @@ class BillItemVoid(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     bill_item = models.ForeignKey(BillItem, on_delete=models.CASCADE, null=True, blank=True)
+    employee = models.CharField(max_length=100, null=True, blank=True)
     # quantity = models.IntegerField()
     reason = models.CharField(max_length=255, null=True, blank=True)
 

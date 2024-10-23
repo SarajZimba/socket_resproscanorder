@@ -243,7 +243,7 @@ class MasterBillDetailView(generics.ListAPIView):
 
             # Create a response dictionary with "bill_data" key
             response_data = {
-                # "bill_data": serializer.data,
+                "bill_data": serializer.data,
                 'terminal': terminal.terminal_no,
                 "payment_modes": payment_mode_serializer.data,
                 "Starting_from":starting_from_invoice,
@@ -400,6 +400,103 @@ class MasterBillDetailView(generics.ListAPIView):
     #     bill_items_total = dict(bill_items_total)
 
     #     return bill_items_total
+    
+    def calculate_bill_items_total(self, queryset):
+        bill_items_total = defaultdict(list)
+
+        # Create a dictionary to store product quantities
+        product_quantities = defaultdict(lambda: {'quantity': 0, 'rate': 0, 'product_title': ''})
+
+        for bill in queryset:
+            for bill_item in bill.bill_items.all():
+                product_id = bill_item.product.id
+                quantity = bill_item.product_quantity
+                rate = bill_item.rate
+                product_title = bill_item.product_title
+                product_category = bill_item.product.type.title  # Assuming 'type' is the related field to ProductCategory
+
+                key = (product_id, rate)
+                if key in product_quantities:
+                    product_quantities[key]['quantity'] += quantity
+                else:
+                    product_quantities[key] = {
+                        'quantity': quantity,
+                        'rate': rate,
+                        'product_title': product_title,
+                        'type': product_category
+                    }
+
+                # Append the bill item to the corresponding category list
+
+        for product_id, item_data in product_quantities.items():
+                bill_items_total[item_data['type']].append({
+                    'product_title': item_data['product_title'],
+                    'product_quantity': item_data['quantity'],
+                    'rate': item_data['rate'],
+                    'amount': item_data['quantity'] * item_data['rate'],
+                })
+
+        # Convert defaultdict to regular dict for JSON serialization
+        bill_items_total = dict(bill_items_total)
+
+        return bill_items_total
+    
+from django.utils.dateparse import parse_date
+class MasterBillBranch(APIView):
+    # def get(self, request, *args, **kwargs):
+    def get_branch(self):
+        jwt_token = self.request.META.get("HTTP_AUTHORIZATION")
+        jwt_token = jwt_token.split()[1]
+        try:
+            token_data = jwt.decode(jwt_token, options={"verify_signature": False})  # Disable signature verification for claims extraction
+            user_id = token_data.get("user_id")
+            username = token_data.get("username")
+            role = token_data.get("role")
+            # You can access other claims as needed
+
+            # Assuming "branch" is one of the claims, access it
+            branch = token_data.get("branch")
+
+            # Print the branch
+            print("Branch:", branch)
+        except jwt.ExpiredSignatureError:
+            print("Token has expired.")
+        except jwt.DecodeError:
+            print("Token is invalid.")
+        print(branch)
+        branch = Branch.objects.get(id=branch)
+        return branch
+
+    def get(self, request, *args, **kwargs):
+
+        branch = self.get_branch()
+        if not branch:
+            return Response({"error": "Branch not found."}, status=404)
+        # branch_queryset = Bill.objects.filter(is_end_day=False, branch=branch)
+
+        # bill_items_total = self.calculate_bill_items_total(branch_queryset)
+
+        # Get fromDate and toDate from query parameters
+        from_date_str = request.GET.get('fromDate')
+        to_date_str = request.GET.get('toDate')
+
+        if not (from_date_str and to_date_str):
+            return Response("Please provide date", 400)
+
+        # Parse dates from strings
+        from_date = parse_date(from_date_str)
+        to_date = parse_date(to_date_str)
+
+        if from_date is None or to_date is None:
+            return Response({"error": "Invalid date format."}, status=400)
+
+        queryset = Bill.objects.filter(branch=branch,
+                        transaction_date__range=[from_date, to_date]  )
+        from api.serializers.bill import SilverPlatterBillSerializer
+
+        serilaizer = SilverPlatterBillSerializer(queryset, many=True)
+
+        return Response(serilaizer.data, 200)
     
     def calculate_bill_items_total(self, queryset):
         bill_items_total = defaultdict(list)
