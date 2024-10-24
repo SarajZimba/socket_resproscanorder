@@ -792,13 +792,13 @@ class BranchTodaysSalesDateWise(APIView):
         terminals = Terminal.objects.filter(branch=branch, status=True, is_deleted=False)
 
         for terminal in terminals:
-            terminal_bills = Bill.objects.filter(terminal=terminal.terminal_no).order_by('id')
+            terminal_bills = queryset1.filter(terminal=terminal.terminal_no).order_by('id')
             if terminal_bills:
                 terminal_data = {
                     'terminal':terminal.terminal_no,
                     'start_bill': terminal_bills.first().invoice_number if terminal_bills else None,
                     'end_bill': terminal_bills.last().invoice_number if terminal_bills else None,
-                    'brnach':branch.name
+                    'branch':branch.name
                 }
                 enddays_terminal.append(terminal_data)
 
